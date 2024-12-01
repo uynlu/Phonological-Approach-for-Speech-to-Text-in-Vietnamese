@@ -5,14 +5,14 @@ from dataset.text.vocabulary import Vocabulary
 
 
 class CustomText(Dataset):
-    def __init__(self, data_directory, vocab=Vocabulary()):
+    def __init__(self, data_directory):
         super(CustomText, self).__init__()
 
         with open(data_directory, mode="r", encoding="utf-8") as file:
             data = json.load(file)
         self.data = list(data.items())
 
-        self.vocab = vocab
+        self.vocab = Vocabulary()
 
     def __len__(self):
         return len(self.data)
