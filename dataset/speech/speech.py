@@ -32,7 +32,7 @@ class MelSpectrogram(nn.Module):
 class MFCC(nn.Module):
     def __init__(self, sample_rate=16000, n_mfcc=50, n_mels=64, win_length=400, hop_length=512, n_ffts=1024):
         super(MFCC, self).__init__()
-
+        
         self.transform = transforms.MFCC(
             sample_rate=sample_rate,
             n_mfcc=n_mfcc,
@@ -73,7 +73,7 @@ class CustomSpeech(Dataset):
         audio_wave, sample_rate = librosa.load(audio_path)
         # audio_wave, sample_rate = torchaudio.load(audio_path) => Nếu dùng được thì dùng cho logic
         signal = self._resample_if_necessary(torch.tensor(audio_wave), sample_rate)
-        # signal = self._cut_down_if_necessary(signal)
+        signal = self._cut_down_if_necessary(signal)
         signal = self._right_pad_if_necessary(signal)
         mel_spectrogram = self.transformation(signal)
         
@@ -90,8 +90,10 @@ class CustomSpeech(Dataset):
             audio_wave = resampler(audio_wave)
         return audio_wave
     
-    # def _cut_down_if_necessary(self, signal):
-    #     pass
+    def _cut_down_if_necessary(self, signal):
+        if signal.shape[0] > self.num_samples:
+            signal = signal[:, :self.num_samples]
+        return signal
 
     def _right_pad_if_necessary(self, signal):
         length_signal = signal.shape[0]
