@@ -4,11 +4,11 @@ from dataset.text.text import CustomText
 
 
 class CustomDataset(Dataset):
-    def __init__(self, audio_directory, data_directory, target_sample_rate, num_samples, transformation=False):
+    def __init__(self, audio_directory, data_directory, target_sample_rate, num_samples, transformation, vocab):
         super(CustomDataset, self).__init__()
 
-        self.speech = CustomSpeech(audio_directory, data_directory, target_sample_rate, num_samples, transformation=False)
-        self.script = CustomText(data_directory) 
+        self.speech = CustomSpeech(audio_directory, data_directory, target_sample_rate, num_samples, transformation)
+        self.script = CustomText(data_directory, vocab) 
         
     def __len__(self):
         return len(self.data)

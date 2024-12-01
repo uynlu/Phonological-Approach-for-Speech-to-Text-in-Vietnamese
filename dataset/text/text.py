@@ -5,7 +5,7 @@ from dataset.text.vocabulary import Vocabulary
 
 
 class CustomText(Dataset):
-    def __init__(self, data_directory, vocab: Vocabulary):
+    def __init__(self, data_directory, vocab=Vocabulary()):
         super(CustomText, self).__init__()
 
         with open(data_directory, mode="r", encoding="utf-8") as file:

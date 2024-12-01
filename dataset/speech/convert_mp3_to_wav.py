@@ -11,4 +11,3 @@ def convert_mp3_to_wav(dataset_directory):
             file_path = os.path.join(origin_directory, file)
             sound = AudioSegment.from_mp3(file_path)
             sound.export(os.path.join(converted_directory, f"{file.split(".")[0]}.wav"), format="wav")
-            
