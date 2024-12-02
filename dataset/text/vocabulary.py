@@ -5,6 +5,7 @@ class Vocabulary:
     def __init__(self):
         self.consonant_2_index = {
             "": 0,
+            # Phụ âm
             "b": 1,
             "c": 2,
             "d": 3,
@@ -30,204 +31,218 @@ class Vocabulary:
             "nh": 23,
             "kh": 24,
             "gi": 25,
-            "ngh": 26
+            "ngh": 26,
+            # Ngoại lệ
+            "1": 27,
+            "2": 28,
+            "3": 29,
+            "4": 30,
+            "5": 31,
+            "6": 32,
+            "7": 33,
+            "8": 34,
+            "9": 35,
+            "0": 36,
+            "<pad>": 37,
+            "<sos>": 38,
+            "<eos>": 39,
+            "Đắk Lắk": 40,
+            "Đắk Nông": 41
         }
 
         self.vowel_2_index = {
+            "": 0,
             # a
-            "a": 0,
-            "ac": 1,
-            "ach": 2,
-            "ai": 3,
-            "am": 4,
-            "an": 5,
-            "ang": 6,
-            "anh": 7,
-            "ao": 8,
-            "ap": 9,
-            "at": 10,
-            "ay": 11,
-            "au": 12,
+            "a": 1,
+            "ac": 2,
+            "ach": 3,
+            "ai": 4,
+            "am": 5,
+            "an": 6,
+            "ang": 7,
+            "anh": 8,
+            "ao": 9,
+            "ap": 10,
+            "at": 11,
+            "ay": 12,
+            "au": 13,
             # ă
-            "ă": 13,
-            "ăc": 14,
-            "ăm": 15,
-            "ăn": 16,
-            "ăng": 17,
-            "ăp": 18,
-            "ăt": 19,
+            "ă": 14,
+            "ăc": 15,
+            "ăm": 16,
+            "ăn": 17,
+            "ăng": 18,
+            "ăp": 19,
+            "ăt": 20,
             # â
-            "â": 20,
-            "âc": 21,
-            "âm": 22,
-            "ân": 23,
-            "âng": 24,
-            "âp": 25,
-            "ât": 26,
-            "âu": 27,
-            "ây": 28,
+            "â": 21,
+            "âc": 22,
+            "âm": 23,
+            "ân": 24,
+            "âng": 25,
+            "âp": 26,
+            "ât": 27,
+            "âu": 28,
+            "ây": 29,
             # e
-            "e": 29,
-            "ec": 30,
-            "em": 31,
-            "en": 32,
-            "eng": 33,
-            "eo": 34,
-            "ep": 35,
-            "et": 36,
+            "e": 30,
+            "ec": 31,
+            "em": 32,
+            "en": 33,
+            "eng": 34,
+            "eo": 35,
+            "ep": 36,
+            "et": 37,
             # ê
-            "ê": 37,
-            "êch": 38,
-            "êm": 39,
-            "ên": 40,
-            "ênh": 41,
-            "êp": 42,
-            "êt": 43,
-            "êu": 44,
+            "ê": 38,
+            "êch": 39,
+            "êm": 40,
+            "ên": 41,
+            "ênh": 42,
+            "êp": 43,
+            "êt": 44,
+            "êu": 45,
             # i            
-            "i": 45,
-            "ia": 46,
-            "ich": 47,
-            "iêc": 48,
-            "iêm": 49,
-            "iên": 50,
-            "iêng": 51,
-            "iêp": 52,
-            "iêt": 53,
-            "iêu": 54,
-            "im": 55,
-            "in": 56,
-            "inh": 57,
-            "ip": 58,
-            "it": 59,
-            "iu": 60,
+            "i": 46,
+            "ia": 47,
+            "ich": 48,
+            "iêc": 49,
+            "iêm": 50,
+            "iên": 51,
+            "iêng": 52,
+            "iêp": 53,
+            "iêt": 54,
+            "iêu": 55,
+            "im": 56,
+            "in": 57,
+            "inh": 58,
+            "ip": 59,
+            "it": 60,
+            "iu": 61,
             # o
-            "o": 61,
-            "oa": 62,
-            "oac": 63,
-            "oach": 64,
-            "oai": 65,
-            "oam": 66,
-            "oan": 67,
-            "oang": 68,
-            "oanh": 69,
-            "oao": 70,
-            "oap": 71,
-            "oat": 72,
-            "oay": 73,
-            "oăc": 74,
-            "oăm": 75,
-            "oăn": 76,
-            "oăng": 77,
-            "oăt": 78,
-            "oc": 79,
-            "oe": 80,
-            "oen": 81,
-            "oeo": 82,
-            "oet": 83,
-            "oi": 84,
-            "om": 85,
-            "on": 86,
-            "ong": 87,
-            "ooc": 88,
-            "oong": 89,
-            "op": 90,
-            "ot": 91,
+            "o": 62,
+            "oa": 63,
+            "oac": 64,
+            "oach": 65,
+            "oai": 66,
+            "oam": 67,
+            "oan": 68,
+            "oang": 69,
+            "oanh": 70,
+            "oao": 71,
+            "oap": 72,
+            "oat": 73,
+            "oay": 74,
+            "oăc": 75,
+            "oăm": 76,
+            "oăn": 77,
+            "oăng": 78,
+            "oăt": 79,
+            "oc": 80,
+            "oe": 81,
+            "oen": 82,
+            "oeo": 83,
+            "oet": 84,
+            "oi": 85,
+            "om": 86,
+            "on": 87,
+            "ong": 88,
+            "ooc": 89,
+            "oong": 90,
+            "op": 91,
+            "ot": 92,
             # ô
-            "ô": 92,
-            "ôc": 93,
-            "ôi": 94,
-            "ôm": 95,
-            "ôn": 96,
-            "ông": 97,
-            "ôp": 98,
-            "ôt": 99,
+            "ô": 93,
+            "ôc": 94,
+            "ôi": 95,
+            "ôm": 96,
+            "ôn": 97,
+            "ông": 98,
+            "ôp": 99,
+            "ôt": 100,
             # ơ
-            "ơ": 100,
-            "ơi": 101,
-            "ơm": 102,
-            "ơn": 103,
-            "ơp": 104,
-            "ơt": 105,
+            "ơ": 101,
+            "ơi": 102,
+            "ơm": 103,
+            "ơn": 104,
+            "ơp": 105,
+            "ơt": 106,
             # u
-            "u": 106,
-            "ua": 107,
-            "uân": 108,
-            "uâng": 109,
-            "uât": 110,
-            "uây": 111,
-            "uc": 112,
-            "uê": 113,
-            "uêch": 114,
-            "uênh": 115,
-            "ui": 116,
-            "um": 117,
-            "un": 118,
-            "ung": 119,
-            "uơ": 120,
-            "uôc": 121,
-            "uôi": 122,
-            "uôm": 123,
-            "uôn": 124,
-            "uông": 125,
-            "uôt": 126,
-            "up": 127,
-            "ut": 128,
-            "uy": 129,
-            "uya": 130,
-            "uych": 131,
-            "uyên": 132,
-            "uyêt": 133,
-            "uyn": 134,
-            "uynh": 135,
-            "uyp": 136,
-            "uyt": 137,
-            "uyu": 138,
+            "u": 107,
+            "ua": 108,
+            "uân": 109,
+            "uâng": 110,
+            "uât": 111,
+            "uây": 112,
+            "uc": 113,
+            "uê": 114,
+            "uêch": 115,
+            "uênh": 116,
+            "ui": 117,
+            "um": 118,
+            "un": 119,
+            "ung": 120,
+            "uơ": 121,
+            "uôc": 122,
+            "uôi": 123,
+            "uôm": 124,
+            "uôn": 125,
+            "uông": 126,
+            "uôt": 127,
+            "up": 128,
+            "ut": 129,
+            "uy": 130,
+            "uya": 131,
+            "uych": 132,
+            "uyên": 133,
+            "uyêt": 134,
+            "uyn": 135,
+            "uynh": 136,
+            "uyp": 137,
+            "uyt": 138,
+            "uyu": 139,
             # ư
-            "ư": 139,
-            "ưa": 140,
-            "ưc": 141,
-            "ưi": 142,
-            "ưng": 143,
-            "ươc": 144,
-            "ươi": 145,
-            "ươm": 146,
-            "ươn": 147,
-            "ương": 148,
-            "ươp": 149,
-            "ươt": 150,
-            "ươu": 151,
-            "ưt": 152,
-            "ưu": 153,
+            "ư": 140,
+            "ưa": 141,
+            "ưc": 142,
+            "ưi": 143,
+            "ưng": 144,
+            "ươc": 145,
+            "ươi": 146,
+            "ươm": 147,
+            "ươn": 148,
+            "ương": 149,
+            "ươp": 150,
+            "ươt": 151,
+            "ươu": 152,
+            "ưt": 153,
+            "ưu": 154,
             # y
-            "y": 154,
-            "yêm": 155,
-            "yên": 156,
-            "yêng": 157,
-            "yêt": 158,
-            "yêu": 159,
+            "y": 155,
+            "yêm": 156,
+            "yên": 157,
+            "yêng": 158,
+            "yêt": 159,
+            "yêu": 160
         }
 
         self.tone_2_index = {
-            "ngang": 0,
-            "sắc": 1,
-            "huyền": 2,
-            "hỏi": 3,
-            "ngã": 4,
-            "nặng": 5
+            "": 0,
+            "ngang": 1,
+            "sắc": 2,
+            "huyền": 3,
+            "hỏi": 4,
+            "ngã": 5,
+            "nặng": 6
         }
-
-        # self.exception_2_index = {
-        #     "Đắk Lắk"
-        #     "Đắk Nông"
-        # }
 
         self.index_2_consonant = {i: c for c, i in self.consonant_2_index.items()}
         self.index_2_vowel = {i: v for v, i in self.vowel_2_index.items()}
         self.index_2_tone = {i: t for t, i in self.tone_2_index.items()}
 
     def __len__(self):
-        return (len(self.consonant_2_index) * len(self.vowel_2_index) * len(self.tone_2_index))
+        # return (len(self.consonant_2_index) + len(self.vowel_2_index) + len(self.tone_2_index))
+        pass  # xem lại
     
     def __getindex__(self, word):
         tokenized_word = self._tokenize_word(word)
@@ -243,61 +258,64 @@ class Vocabulary:
         tokenized_word = []
         # Lấy phụ âm
         num_consonant = 0
-        if word[:1] in ["b", "c", "d", "đ", "g", "h", "k", "l", "m", "n", "p", "q", "r", "s", "t", "v", "x"]:
-            if word[:2] in ["ch", "gh", "ng", "tr", "qu", "ph", "th", "nh", "kh", "gi"]:
-                if word[:3] == "ngh":
-                    tokenized_word.append(word[:3])
-                    num_consonant = 3
+        if word in list(self.consonant_2_index.keys())[27:]:
+            tokenized_word = [word, "", ""]
+        else:
+            if word[:1] in ["b", "c", "d", "đ", "g", "h", "k", "l", "m", "n", "p", "q", "r", "s", "t", "v", "x"]:
+                if word[:2] in ["ch", "gh", "ng", "tr", "qu", "ph", "th", "nh", "kh", "gi"]:
+                    if word[:3] == "ngh":
+                        tokenized_word.append(word[:3])
+                        num_consonant = 3
+                    else:
+                        tokenized_word.append(word[:2])
+                        num_consonant = 2
                 else:
-                    tokenized_word.append(word[:2])
-                    num_consonant = 2
-            else:
-                tokenized_word.append(word[:1])
-                num_consonant = 1
-        else:  # không có phụ âm
-            tokenized_word.append("")
-            
-        # Lấy vần
-        map_tone = {
-            "á": "a", "à": "a", "ả": "a", "ã": "a", "ạ": "a",
-            "ắ": "ă", "ằ": "ă", "ẳ": "ă", "ẵ": "ă", "ặ": "ă",
-            "ấ": "â", "ầ": "â", "ẩ": "â", "ẫ": "â", "ậ": "â",
-            "í": "i", "ì": "i", "ỉ": "i", "ĩ": "i", "ị": "i",
-            "ý": "y", "ỳ": "y", "ỷ": "y", "ỹ": "y", "ỵ": "y",
-            "ó": "o", "ò": "o", "ỏ": "o", "õ": "o", "ọ": "o",
-            "ố": "ô", "ồ": "ô", "ổ": "ô", "ỗ": "ô", "ộ": "ô",
-            "ớ": "ơ", "ờ": "ơ", "ở": "ơ", "ỡ": "ơ", "ợ": "ơ",
-            "é": "e", "è": "e", "ẻ": "e", "ẽ": "e", "ẹ": "e",
-            "ế": "ê", "ề": "ê", "ể": "ê", "ễ": "ê", "ệ": "ê",
-            "ú": "u", "ù": "u", "ủ": "u", "ũ": "u", "ụ": "u",
-            "ứ": "ư", "ừ": "ư", "ử": "ư", "ữ": "ư", "ự": "ư"
-        }
-        vowels = []
-        for character in word[num_consonant:]:
-            transformed_character = map_tone.get(character, character)
-            vowels.append(transformed_character)
-        tokenized_word.append("".join(vowels))
+                    tokenized_word.append(word[:1])
+                    num_consonant = 1
+            else:  # không có phụ âm
+                tokenized_word.append("")
+                
+            # Lấy vần
+            map_tone = {
+                "á": "a", "à": "a", "ả": "a", "ã": "a", "ạ": "a",
+                "ắ": "ă", "ằ": "ă", "ẳ": "ă", "ẵ": "ă", "ặ": "ă",
+                "ấ": "â", "ầ": "â", "ẩ": "â", "ẫ": "â", "ậ": "â",
+                "í": "i", "ì": "i", "ỉ": "i", "ĩ": "i", "ị": "i",
+                "ý": "y", "ỳ": "y", "ỷ": "y", "ỹ": "y", "ỵ": "y",
+                "ó": "o", "ò": "o", "ỏ": "o", "õ": "o", "ọ": "o",
+                "ố": "ô", "ồ": "ô", "ổ": "ô", "ỗ": "ô", "ộ": "ô",
+                "ớ": "ơ", "ờ": "ơ", "ở": "ơ", "ỡ": "ơ", "ợ": "ơ",
+                "é": "e", "è": "e", "ẻ": "e", "ẽ": "e", "ẹ": "e",
+                "ế": "ê", "ề": "ê", "ể": "ê", "ễ": "ê", "ệ": "ê",
+                "ú": "u", "ù": "u", "ủ": "u", "ũ": "u", "ụ": "u",
+                "ứ": "ư", "ừ": "ư", "ử": "ư", "ữ": "ư", "ự": "ư"
+            }
+            vowels = []
+            for character in word[num_consonant:]:
+                transformed_character = map_tone.get(character, character)
+                vowels.append(transformed_character)
+            tokenized_word.append("".join(vowels))
 
-        # Lấy thanh điệu
-        for index, character in enumerate(word[num_consonant:]):
-            if re.match(r"[áắấíýóốớéếúứ]", character):
-                tokenized_word.append("sắc")
-                break
-            elif re.match(r"[àằầìỳòồờèềùừ]", character):
-                tokenized_word.append("huyền")
-                break
-            elif re.match(r"[ảẳẩỉỷỏổởẻểủử]", character):
-                tokenized_word.append("hỏi")
-                break
-            elif re.match(r"[ãẵẫĩỹõỗỡẽễũữ]", character):
-                tokenized_word.append("ngã")
-                break
-            elif re.match(r"[ạặậịỵọộợẹệụự]", character):
-                tokenized_word.append("nặng")
-                break
-            if index == len(word[num_consonant:]) - 1:
-                tokenized_word.append("ngang")
-        
+            # Lấy thanh điệu
+            for index, character in enumerate(word[num_consonant:]):
+                if re.match(r"[áắấíýóốớéếúứ]", character):
+                    tokenized_word.append("sắc")
+                    break
+                elif re.match(r"[àằầìỳòồờèềùừ]", character):
+                    tokenized_word.append("huyền")
+                    break
+                elif re.match(r"[ảẳẩỉỷỏổởẻểủử]", character):
+                    tokenized_word.append("hỏi")
+                    break
+                elif re.match(r"[ãẵẫĩỹõỗỡẽễũữ]", character):
+                    tokenized_word.append("ngã")
+                    break
+                elif re.match(r"[ạặậịỵọộợẹệụự]", character):
+                    tokenized_word.append("nặng")
+                    break
+                if index == len(word[num_consonant:]) - 1:
+                    tokenized_word.append("ngang")
+
         return tokenized_word
             
     def _encode_word(self, tokenized_word):

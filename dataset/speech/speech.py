@@ -1,9 +1,9 @@
 import torch.nn as nn
+import torchaudio
 from torchaudio import transforms
 from torch.utils.data import Dataset
 import json
 import os
-import librosa  # Không dùng torchaudio.load() được => dùng tạm qua librosa
 import torch
 import torch.nn.functional as F
 
@@ -70,14 +70,14 @@ class CustomSpeech(Dataset):
 
     def __getitem__(self, index):
         audio_path = self._get_audio_path(index)
-        audio_wave, sample_rate = librosa.load(audio_path)
-        # audio_wave, sample_rate = torchaudio.load(audio_path) => Nếu dùng được thì dùng cho logic
-        signal = self._resample_if_necessary(torch.tensor(audio_wave), sample_rate)
+        audio_wave, sample_rate = torchaudio.load(audio_path)  # torch.Tensor(num_channel, origin_num_sample), int
+        signal = self._resample_if_necessary(audio_wave, sample_rate)  # torch.Tensor(resampled_num_sample, N)
         signal = self._cut_down_if_necessary(signal)
-        signal = self._right_pad_if_necessary(signal)
-        mel_spectrogram = self.transformation(signal)
-        
-        return signal, mel_spectrogram
+        signal = self._pad_if_necessary(signal)  # torch.Tensor(num_channel, num_sample)
+        mel = self.transformation(signal)  # torch.Tensor(num_channel, num_mels, transformed_num_sample)
+        mel = mel.squeeze()
+        mel = mel.permute(1, 0)  # torch.Tensor(transformed_num_sample, num_mels)
+        return mel
 
     def _get_audio_path(self, index):
         file = (self.data[index][1]['voice']).replace(".mp3", ".wav")
@@ -91,12 +91,12 @@ class CustomSpeech(Dataset):
         return audio_wave
     
     def _cut_down_if_necessary(self, signal):
-        if signal.shape[0] > self.num_samples:
+        if signal.size()[1] > self.num_samples:
             signal = signal[:, :self.num_samples]
         return signal
 
-    def _right_pad_if_necessary(self, signal):
-        length_signal = signal.shape[0]
+    def _pad_if_necessary(self, signal):
+        length_signal = signal.size()[1]
         if length_signal < self.num_samples:
             num_missing_samples = self.num_samples - length_signal
             last_dim_padding = (0, num_missing_samples)
