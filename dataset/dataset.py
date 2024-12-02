@@ -15,3 +15,4 @@ class CustomDataset(Dataset):
     
     def __getitem__(self, index):
         return self.speech[index], self.script[index]
+    
