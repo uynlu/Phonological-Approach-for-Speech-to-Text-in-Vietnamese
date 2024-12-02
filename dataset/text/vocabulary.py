@@ -217,6 +217,11 @@ class Vocabulary:
             "nặng": 5
         }
 
+        # self.exception_2_index = {
+        #     "Đắk Lắk"
+        #     "Đắk Nông"
+        # }
+
         self.index_2_consonant = {i: c for c, i in self.consonant_2_index.items()}
         self.index_2_vowel = {i: v for v, i in self.vowel_2_index.items()}
         self.index_2_tone = {i: t for t, i in self.tone_2_index.items()}
@@ -225,7 +230,7 @@ class Vocabulary:
         return (len(self.consonant_2_index) * len(self.vowel_2_index) * len(self.tone_2_index))
     
     def __getindex__(self, word):
-        tokenized_word = self._tokenized_word(word)
+        tokenized_word = self._tokenize_word(word)
         encoded_word = self._encode_word(tokenized_word)
         return encoded_word
 
@@ -234,7 +239,7 @@ class Vocabulary:
         word = self._merge_item_of_word(item_of_word)
         return word
 
-    def _tokenized_word(self, word):
+    def _tokenize_word(self, word):
         tokenized_word = []
         # Lấy phụ âm
         num_consonant = 0
@@ -292,6 +297,8 @@ class Vocabulary:
                 break
             if index == len(word[num_consonant:]) - 1:
                 tokenized_word.append("ngang")
+        
+        return tokenized_word
             
     def _encode_word(self, tokenized_word):
         return [self.consonant_2_index.get(tokenized_word[0]), self.vowel_2_index.get(tokenized_word[1]), self.tone_2_index.get(tokenized_word[2])]
