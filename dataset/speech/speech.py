@@ -4,7 +4,7 @@ from torchaudio import transforms
 from torch.utils.data import Dataset
 import json
 import os
-import torch
+# import torch
 import torch.nn.functional as F
 
 
@@ -70,36 +70,36 @@ class CustomSpeech(Dataset):
 
     def __getitem__(self, index):
         audio_path = self._get_audio_path(index)
-        audio_wave, sample_rate = torchaudio.load(audio_path)  # torch.Tensor(num_channel, origin_num_sample), int
-        signal = self._resample_if_necessary(audio_wave, sample_rate)  # torch.Tensor(resampled_num_sample, N)
-        signal = self._cut_down_if_necessary(signal)
-        signal = self._pad_if_necessary(signal)  # torch.Tensor(num_channel, num_sample)
-        mel = self.transformation(signal)  # torch.Tensor(num_channel, num_mels, transformed_num_sample)
-        mel = mel.squeeze()
-        mel = mel.permute(1, 0)  # torch.Tensor(transformed_num_sample, num_mels)
+        audio_wave, sample_rate = torchaudio.load(audio_path)  # (num_channels, origin_num_samples), int
+        resampled_signal = self._resample_if_necessary(audio_wave, sample_rate)  # (num_channels, resampled_num_samples)
+        cut_signal = self._cut_down_if_necessary(resampled_signal)  # (num_channels, num_samples)
+        padded_signal = self._pad_if_necessary(cut_signal)  # (num_channels, num_samples)
+        mel = self.transformation(padded_signal)  # (num_channels, num_mels, num_samples)
+        mel = mel.squeeze()  # (num_mels, num_samples)
+        mel = mel.permute(1, 0)  # (num_samples, num_mels)
         return mel
 
     def _get_audio_path(self, index):
         file = (self.data[index][1]['voice']).replace(".mp3", ".wav")
         return os.path.join(self.audio_directory, file)
     
-    # Không phải tất cả mẫu đều có sample_rate như nhau => resample
     def _resample_if_necessary(self, audio_wave, sample_rate):
         if sample_rate != self.target_sample_rate:
             resampler = transforms.Resample(sample_rate, self.target_sample_rate)
             audio_wave = resampler(audio_wave)
         return audio_wave
     
-    def _cut_down_if_necessary(self, signal):
-        if signal.size()[1] > self.num_samples:
-            signal = signal[:, :self.num_samples]
-        return signal
+    def _cut_down_if_necessary(self, resampled_signal):
+        cut_signal = resampled_signal.clone()
+        if resampled_signal.size()[1] > self.num_samples:
+            cut_signal = cut_signal[:, :self.num_samples]
+        return cut_signal
 
-    def _pad_if_necessary(self, signal):
-        length_signal = signal.size()[1]
-        if length_signal < self.num_samples:
-            num_missing_samples = self.num_samples - length_signal
+    def _pad_if_necessary(self, cut_signal):
+        padded_signal = cut_signal.clone()
+        if padded_signal.size()[1] < self.num_samples:
+            signal_length = padded_signal.size()[1]
+            num_missing_samples = self.num_samples - signal_length
             last_dim_padding = (0, num_missing_samples)
-            signal = F.pad(signal, last_dim_padding)
-        return signal
-    
+            padded_signal = F.pad(padded_signal, last_dim_padding)
+        return padded_signal

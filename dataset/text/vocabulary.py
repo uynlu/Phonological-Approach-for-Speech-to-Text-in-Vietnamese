@@ -241,8 +241,14 @@ class Vocabulary:
         self.index_2_tone = {i: t for t, i in self.tone_2_index.items()}
 
     def __len__(self):
-        # return (len(self.consonant_2_index) + len(self.vowel_2_index) + len(self.tone_2_index))
-        pass  # xem lại
+        consonants = list(self.consonant_2_index.keys())[:27]
+        vowels = list(self.vowel_2_index.keys())
+        tone = list(self.tone_2_index.keys())
+        exception = list(self.consonant_2_index.keys())[27:]
+        return len(consonants) * len(vowels) * len(tone) + len(exception)
+
+    def len(self):
+        return len(self.consonant_2_index), len(self.vowel_2_index), len(self.tone_2_index)
     
     def __getindex__(self, word):
         tokenized_word = self._tokenize_word(word)
@@ -254,6 +260,15 @@ class Vocabulary:
         word = self._merge_item_of_word(item_of_word)
         return word
 
+    def _is_number(self, word):
+        if word.isdigit():
+            return True
+        try:
+            float(word)
+            return True
+        except ValueError:
+            return False
+    
     def _tokenize_word(self, word):
         tokenized_word = []
         # Lấy phụ âm
