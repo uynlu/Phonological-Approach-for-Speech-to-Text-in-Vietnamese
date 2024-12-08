@@ -305,12 +305,12 @@ class Vocabulary:
                 "ú": "u", "ù": "u", "ủ": "u", "ũ": "u", "ụ": "u",
                 "ứ": "ư", "ừ": "ư", "ử": "ư", "ữ": "ư", "ự": "ư"
             }
-            vowels = []
+            vowel = []
             for character in word[num_consonant:]:
                 transformed_character = map_tone.get(character, character)
-                vowels.append(transformed_character)
-            tokenized_word.append("".join(vowels))
-
+                vowel.append(transformed_character)
+            tokenized_word.append("".join(vowel))
+            
             # Lấy thanh điệu
             for index, character in enumerate(word[num_consonant:]):
                 if re.match(r"[áắấíýóốớéếúứ]", character):
@@ -332,7 +332,7 @@ class Vocabulary:
                     tokenized_word.append("ngang")
 
         return tokenized_word
-            
+    
     def _encode_word(self, tokenized_word):
         return [self.consonant_2_index.get(tokenized_word[0]), self.vowel_2_index.get(tokenized_word[1]), self.tone_2_index.get(tokenized_word[2])]
         

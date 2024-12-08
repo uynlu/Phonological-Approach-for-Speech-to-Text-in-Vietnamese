@@ -1,6 +1,8 @@
 from torch.utils.data import Dataset
 import json
 from dataset.text.vocabulary import Vocabulary
+import re
+import string
 import torch
 
 
@@ -21,7 +23,8 @@ class CustomText(Dataset):
     def __getitem__(self, index):
         script = self._get_script(index)
         lowered_script = self._lower(script)
-        tokenized_script = self._tokenize(lowered_script)
+        removed_script = self._remove_special_characters(lowered_script)
+        tokenized_script = self._tokenize(removed_script)
         encoded_script = self._encode(tokenized_script)
         cut_script = self._cut_down_if_necessary(encoded_script)
         padded_script = self._pad_if_necessary(cut_script)
@@ -31,11 +34,17 @@ class CustomText(Dataset):
         return self.data[index][1]["script"]
     
     def _lower(self, script):
-        return script.lower()
+        lowered_script = script.lower()
+        return lowered_script
+    
+    def _remove_special_characters(self, lowered_script):
+        pattern = f"[{re.escape(string.punctuation)}]"
+        removed_script = re.sub(pattern, "", lowered_script) 
+        return removed_script
 
-    def _tokenize(self, lowered_script):
+    def _tokenize(self, removed_script):
         tokenized_script = []
-        for word in lowered_script.split():
+        for word in removed_script.split():
             if self.vocab._is_number(word):
                 numbers = [number for number in word]
                 for number in numbers:
