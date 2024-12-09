@@ -28,7 +28,8 @@ class CustomText(Dataset):
         encoded_script = self._encode(tokenized_script)
         cut_script = self._cut_down_if_necessary(encoded_script)
         padded_script = self._pad_if_necessary(cut_script)
-        return (torch.Tensor(padded_script)).long()
+        final_script = self._add_token(padded_script)
+        return (torch.Tensor(final_script)).long()
     
     def _get_script(self, index):
         return self.data[index][1]["script"]
@@ -71,7 +72,12 @@ class CustomText(Dataset):
     def _pad_if_necessary(self, cut_script):
         padded_script = cut_script.copy()
         if len(cut_script) < self.max_len:
-            pad_value = self.vocab._encode_word(self.vocab._tokenize_word("<pad>"))
+            pad_value = self.vocab.get_index("<pad>")
             while len(padded_script) < self.max_len:
                 padded_script.append(pad_value)
         return padded_script
+    
+    def _add_token(self, padded_script):
+        final_script = [self.vocab.get_index("<sos>")] + padded_script + [self.vocab.get_index("<eos>")]
+        return final_script
+    

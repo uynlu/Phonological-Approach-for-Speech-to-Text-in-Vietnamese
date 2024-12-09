@@ -43,11 +43,13 @@ class Vocabulary:
             "8": 34,
             "9": 35,
             "0": 36,
-            "<pad>": 37,
-            "<sos>": 38,
-            "<eos>": 39,
-            "Đắk Lắk": 40,
-            "Đắk Nông": 41
+            "<blank>": 37,
+            "<pad>": 38,
+            "<sos>": 39,
+            "<eos>": 40,
+            "Đắk Lắk": 41,
+            "Đắk Nông": 42,
+            "other": 43, # Không phải tiếng Việt (kuman)
         }
 
         self.vowel_2_index = {
@@ -223,7 +225,7 @@ class Vocabulary:
             "yên": 157,
             "yêng": 158,
             "yêt": 159,
-            "yêu": 160
+            "yêu": 160,
         }
 
         self.tone_2_index = {
@@ -233,7 +235,7 @@ class Vocabulary:
             "huyền": 3,
             "hỏi": 4,
             "ngã": 5,
-            "nặng": 6
+            "nặng": 6,
         }
 
         self.index_2_consonant = {i: c for c, i in self.consonant_2_index.items()}
@@ -250,12 +252,12 @@ class Vocabulary:
     def len(self):
         return len(self.consonant_2_index), len(self.vowel_2_index), len(self.tone_2_index)
     
-    def __getindex__(self, word):
+    def get_index(self, word):
         tokenized_word = self._tokenize_word(word)
         encoded_word = self._encode_word(tokenized_word)
         return encoded_word
 
-    def __getword__(self, index):
+    def get_word(self, index):
         item_of_word = self._encode_index(index)
         word = self._merge_item_of_word(item_of_word)
         return word
@@ -305,12 +307,13 @@ class Vocabulary:
                 "ú": "u", "ù": "u", "ủ": "u", "ũ": "u", "ụ": "u",
                 "ứ": "ư", "ừ": "ư", "ử": "ư", "ữ": "ư", "ự": "ư"
             }
-            vowel = []
+            character_vowel = []
             for character in word[num_consonant:]:
                 transformed_character = map_tone.get(character, character)
-                vowel.append(transformed_character)
-            tokenized_word.append("".join(vowel))
-            
+                character_vowel.append(transformed_character)
+            vowel = "".join(character_vowel)
+            tokenized_word.append(vowel)
+
             # Lấy thanh điệu
             for index, character in enumerate(word[num_consonant:]):
                 if re.match(r"[áắấíýóốớéếúứ]", character):
@@ -330,12 +333,17 @@ class Vocabulary:
                     break
                 if index == len(word[num_consonant:]) - 1:
                     tokenized_word.append("ngang")
+            
+            if vowel not in list(self.vowel_2_index.keys()):
+                return ["other", "", ""]
 
         return tokenized_word
     
     def _encode_word(self, tokenized_word):
-        return [self.consonant_2_index.get(tokenized_word[0]), self.vowel_2_index.get(tokenized_word[1]), self.tone_2_index.get(tokenized_word[2])]
-        
+        if self.consonant_2_index.get(tokenized_word[0]) is not None and self.vowel_2_index.get(tokenized_word[1]) is not None and self.tone_2_index.get(tokenized_word[2]) is not None:
+            return [self.consonant_2_index.get(tokenized_word[0]), self.vowel_2_index.get(tokenized_word[1]), self.tone_2_index.get(tokenized_word[2])]
+        else:
+            return [self.consonant_2_index.get("other"), self.vowel_2_index.get(""), self.vowel_2_index.get("")]
     def _encode_index(self, index):
         return [self.index_2_consonant.get(index[0]), self.index_2_vowel.get(index[1]), self.index_2_tone.get(index[2])]
     
