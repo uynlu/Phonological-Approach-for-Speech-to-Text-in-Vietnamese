@@ -1,4 +1,5 @@
 import re
+import numpy as np
 
 
 class Vocabulary:
@@ -47,9 +48,8 @@ class Vocabulary:
             "<pad>": 38,
             "<sos>": 39,
             "<eos>": 40,
-            "Đắk Lắk": 41,
-            "Đắk Nông": 42,
-            "other": 43, # Không phải tiếng Việt (kuman)
+            "Đắk": 41,
+            "Lắk": 42
         }
 
         self.vowel_2_index = {
@@ -253,98 +253,176 @@ class Vocabulary:
         return len(self.consonant_2_index), len(self.vowel_2_index), len(self.tone_2_index)
     
     def get_index(self, word):
-        tokenized_word = self._tokenize_word(word)
+        tokenized_word = self._tokenize(word)
         encoded_word = self._encode_word(tokenized_word)
         return encoded_word
 
     def get_word(self, index):
-        item_of_word = self._encode_index(index)
+        item_of_word = self.encode_index(index)
         word = self._merge_item_of_word(item_of_word)
         return word
-
+    
+    def tokenize(self, word):
+        return self._tokenize(word)
+    
+    def encode_word(self, tokenized_word):
+        return np.array([self.consonant_2_index.get(tokenized_word[0]), self.vowel_2_index.get(tokenized_word[1]), self.tone_2_index.get(tokenized_word[2])])
+    
     def _is_number(self, word):
-        if word.isdigit():
-            return True
         try:
             float(word)
             return True
         except ValueError:
             return False
     
-    def _tokenize_word(self, word):
-        tokenized_word = []
-        # Lấy phụ âm
-        num_consonant = 0
+    def _is_special_character(self, word):
         if word in list(self.consonant_2_index.keys())[27:]:
-            tokenized_word = [word, "", ""]
+            return True
         else:
-            if word[:1] in ["b", "c", "d", "đ", "g", "h", "k", "l", "m", "n", "p", "q", "r", "s", "t", "v", "x"]:
-                if word[:2] in ["ch", "gh", "ng", "tr", "qu", "ph", "th", "nh", "kh", "gi"]:
-                    if word[:3] == "ngh":
-                        tokenized_word.append(word[:3])
-                        num_consonant = 3
-                    else:
-                        tokenized_word.append(word[:2])
-                        num_consonant = 2
+            return False
+    
+    def _is_Vietnamese(self, word):
+        if word[:1] in ["b", "c", "d", "đ", "g", "h", "k", "l", "m", "n", "p", "q", "r", "s", "t", "v", "x"]:
+            if word[:2] in ["ch", "gh", "ng", "tr", "qu", "ph", "th", "nh", "kh", "gi"]:
+                if word[:3] == "ngh":
+                    num_consonant = 3
                 else:
-                    tokenized_word.append(word[:1])
-                    num_consonant = 1
-            else:  # không có phụ âm
-                tokenized_word.append("")
-                
-            # Lấy vần
-            map_tone = {
-                "á": "a", "à": "a", "ả": "a", "ã": "a", "ạ": "a",
-                "ắ": "ă", "ằ": "ă", "ẳ": "ă", "ẵ": "ă", "ặ": "ă",
-                "ấ": "â", "ầ": "â", "ẩ": "â", "ẫ": "â", "ậ": "â",
-                "í": "i", "ì": "i", "ỉ": "i", "ĩ": "i", "ị": "i",
-                "ý": "y", "ỳ": "y", "ỷ": "y", "ỹ": "y", "ỵ": "y",
-                "ó": "o", "ò": "o", "ỏ": "o", "õ": "o", "ọ": "o",
-                "ố": "ô", "ồ": "ô", "ổ": "ô", "ỗ": "ô", "ộ": "ô",
-                "ớ": "ơ", "ờ": "ơ", "ở": "ơ", "ỡ": "ơ", "ợ": "ơ",
-                "é": "e", "è": "e", "ẻ": "e", "ẽ": "e", "ẹ": "e",
-                "ế": "ê", "ề": "ê", "ể": "ê", "ễ": "ê", "ệ": "ê",
-                "ú": "u", "ù": "u", "ủ": "u", "ũ": "u", "ụ": "u",
-                "ứ": "ư", "ừ": "ư", "ử": "ư", "ữ": "ư", "ự": "ư"
-            }
-            character_vowel = []
-            for character in word[num_consonant:]:
-                transformed_character = map_tone.get(character, character)
-                character_vowel.append(transformed_character)
-            vowel = "".join(character_vowel)
-            tokenized_word.append(vowel)
+                    num_consonant = 2
+            else:
+                num_consonant = 1
+        else:
+            num_consonant = 0
+        
+        map_tone = {
+            "á": "a", "à": "a", "ả": "a", "ã": "a", "ạ": "a",
+            "ắ": "ă", "ằ": "ă", "ẳ": "ă", "ẵ": "ă", "ặ": "ă",
+            "ấ": "â", "ầ": "â", "ẩ": "â", "ẫ": "â", "ậ": "â",
+            "í": "i", "ì": "i", "ỉ": "i", "ĩ": "i", "ị": "i",
+            "ý": "y", "ỳ": "y", "ỷ": "y", "ỹ": "y", "ỵ": "y",
+            "ó": "o", "ò": "o", "ỏ": "o", "õ": "o", "ọ": "o",
+            "ố": "ô", "ồ": "ô", "ổ": "ô", "ỗ": "ô", "ộ": "ô",
+            "ớ": "ơ", "ờ": "ơ", "ở": "ơ", "ỡ": "ơ", "ợ": "ơ",
+            "é": "e", "è": "e", "ẻ": "e", "ẽ": "e", "ẹ": "e",
+            "ế": "ê", "ề": "ê", "ể": "ê", "ễ": "ê", "ệ": "ê",
+            "ú": "u", "ù": "u", "ủ": "u", "ũ": "u", "ụ": "u",
+            "ứ": "ư", "ừ": "ư", "ử": "ư", "ữ": "ư", "ự": "ư"
+        }
+        character_vowel = []
+        for character in word[num_consonant:]:
+            transformed_character = map_tone.get(character, character)
+            character_vowel.append(transformed_character)
+        vowel = "".join(character_vowel)
 
-            # Lấy thanh điệu
-            for index, character in enumerate(word[num_consonant:]):
-                if re.match(r"[áắấíýóốớéếúứ]", character):
-                    tokenized_word.append("sắc")
-                    break
-                elif re.match(r"[àằầìỳòồờèềùừ]", character):
-                    tokenized_word.append("huyền")
-                    break
-                elif re.match(r"[ảẳẩỉỷỏổởẻểủử]", character):
-                    tokenized_word.append("hỏi")
-                    break
-                elif re.match(r"[ãẵẫĩỹõỗỡẽễũữ]", character):
-                    tokenized_word.append("ngã")
-                    break
-                elif re.match(r"[ạặậịỵọộợẹệụự]", character):
-                    tokenized_word.append("nặng")
-                    break
-                if index == len(word[num_consonant:]) - 1:
-                    tokenized_word.append("ngang")
-            
-            if vowel not in list(self.vowel_2_index.keys()):
-                return ["other", "", ""]
-
+        if vowel in list(self.vowel_2_index.keys()):
+            return True
+        else:
+            return False
+    
+    # Tokenize
+    def _tokenize(self, word):
+        if self._is_number(word):
+            tokenized_word = self._tokenize_number(word)
+        elif self._is_special_character(word):
+            tokenized_word = self._tokenize_special_character(word)
+        elif self._is_Vietnamese(word) == False:
+            tokenized_word = self._tokenize_non_vietnamese_word(word)
+        else:
+            tokenized_word = self._tokenize_vietnamese_word(word)
         return tokenized_word
     
+    def _tokenize_number(self, word):
+        tokenized_word = []
+        for character in word:
+            tokenized_word.append([character, "", ""])
+        tokenized_word = np.array(tokenized_word)
+        return tokenized_word
+    
+    def _tokenize_special_character(self, word):
+        tokenized_word = [word, "", ""]
+        tokenized_word = (np.array(tokenized_word)).reshape(1, 3)
+        return tokenized_word
+    
+    def _tokenize_non_vietnamese_word(self, word):
+        tokenized_word = []
+        for character in word:
+            if character in list(self.consonant_2_index.keys())[:27]:
+                tokenized_word.append([character, "", ""])
+            elif character in list(self.vowel_2_index.keys()):
+                tokenized_word.append(["", character, ""])
+        tokenized_word = np.array(tokenized_word)
+        return tokenized_word
+
+    def _tokenize_vietnamese_word(self, word):
+        tokenized_word = []
+        # Lấy phụ âm
+        if word[:1] in ["b", "c", "d", "đ", "g", "h", "k", "l", "m", "n", "p", "q", "r", "s", "t", "v", "x"]:
+            if word[:2] in ["ch", "gh", "ng", "tr", "qu", "ph", "th", "nh", "kh", "gi"]:
+                if word[:3] == "ngh":
+                    tokenized_word.append(word[:3])
+                    num_consonant = 3
+                else:
+                    tokenized_word.append(word[:2])
+                    num_consonant = 2
+            else:
+                tokenized_word.append(word[:1])
+                num_consonant = 1
+        else:  # không có phụ âm
+            tokenized_word.append("")
+            num_consonant = 0
+            
+        # Lấy vần
+        map_tone = {
+            "á": "a", "à": "a", "ả": "a", "ã": "a", "ạ": "a",
+            "ắ": "ă", "ằ": "ă", "ẳ": "ă", "ẵ": "ă", "ặ": "ă",
+            "ấ": "â", "ầ": "â", "ẩ": "â", "ẫ": "â", "ậ": "â",
+            "í": "i", "ì": "i", "ỉ": "i", "ĩ": "i", "ị": "i",
+            "ý": "y", "ỳ": "y", "ỷ": "y", "ỹ": "y", "ỵ": "y",
+            "ó": "o", "ò": "o", "ỏ": "o", "õ": "o", "ọ": "o",
+            "ố": "ô", "ồ": "ô", "ổ": "ô", "ỗ": "ô", "ộ": "ô",
+            "ớ": "ơ", "ờ": "ơ", "ở": "ơ", "ỡ": "ơ", "ợ": "ơ",
+            "é": "e", "è": "e", "ẻ": "e", "ẽ": "e", "ẹ": "e",
+            "ế": "ê", "ề": "ê", "ể": "ê", "ễ": "ê", "ệ": "ê",
+            "ú": "u", "ù": "u", "ủ": "u", "ũ": "u", "ụ": "u",
+            "ứ": "ư", "ừ": "ư", "ử": "ư", "ữ": "ư", "ự": "ư"
+        }
+        character_vowel = []
+        for character in word[num_consonant:]:
+            transformed_character = map_tone.get(character, character)
+            character_vowel.append(transformed_character)
+        vowel = "".join(character_vowel)
+        tokenized_word.append(vowel)
+
+        # Lấy thanh điệu
+        for index, character in enumerate(word[num_consonant:]):
+            if re.match(r"[áắấíýóốớéếúứ]", character):
+                tokenized_word.append("sắc")
+                break
+            elif re.match(r"[àằầìỳòồờèềùừ]", character):
+                tokenized_word.append("huyền")
+                break
+            elif re.match(r"[ảẳẩỉỷỏổởẻểủử]", character):
+                tokenized_word.append("hỏi")
+                break
+            elif re.match(r"[ãẵẫĩỹõỗỡẽễũữ]", character):
+                tokenized_word.append("ngã")
+                break
+            elif re.match(r"[ạặậịỵọộợẹệụự]", character):
+                tokenized_word.append("nặng")
+                break
+            if index == len(word[num_consonant:]) - 1:
+                tokenized_word.append("ngang")
+
+        tokenized_word = (np.array(tokenized_word)).reshape(1, 3)
+
+        return tokenized_word
+
     def _encode_word(self, tokenized_word):
-        if self.consonant_2_index.get(tokenized_word[0]) is not None and self.vowel_2_index.get(tokenized_word[1]) is not None and self.tone_2_index.get(tokenized_word[2]) is not None:
-            return [self.consonant_2_index.get(tokenized_word[0]), self.vowel_2_index.get(tokenized_word[1]), self.tone_2_index.get(tokenized_word[2])]
-        else:
-            return [self.consonant_2_index.get("other"), self.vowel_2_index.get(""), self.vowel_2_index.get("")]
-    def _encode_index(self, index):
+        encoded_word = []
+        for item in tokenized_word:
+            encoded_word.append([self.consonant_2_index.get(item[0]), self.vowel_2_index.get(item[1]), self.tone_2_index.get(item[2])])
+        return np.array(encoded_word)
+
+    def encode_index(self, index):
         return [self.index_2_consonant.get(index[0]), self.index_2_vowel.get(index[1]), self.index_2_tone.get(index[2])]
     
     def _merge_item_of_word(self, item_of_word):

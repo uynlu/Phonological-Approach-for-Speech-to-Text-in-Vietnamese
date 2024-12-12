@@ -4,6 +4,7 @@ from dataset.text.vocabulary import Vocabulary
 import re
 import string
 import torch
+import numpy as np
 
 
 class CustomText(Dataset):
@@ -29,7 +30,7 @@ class CustomText(Dataset):
         cut_script = self._cut_down_if_necessary(encoded_script)
         padded_script = self._pad_if_necessary(cut_script)
         final_script = self._add_token(padded_script)
-        return (torch.Tensor(final_script)).long()
+        return torch.tensor(final_script, dtype=torch.long)
     
     def _get_script(self, index):
         return self.data[index][1]["script"]
@@ -44,23 +45,17 @@ class CustomText(Dataset):
         return removed_script
 
     def _tokenize(self, removed_script):
-        tokenized_script = []
-        for word in removed_script.split():
-            if self.vocab._is_number(word):
-                numbers = [number for number in word]
-                for number in numbers:
-                    tokenized_word = self.vocab._tokenize_word(number)
-                    tokenized_script.append(tokenized_word)
-            else:
-                tokenized_word = self.vocab._tokenize_word(word)
-                tokenized_script.append(tokenized_word)
+        tokenized_script = self.vocab.tokenize(removed_script.split()[0])
+        for word in removed_script.split()[1:]:
+            tokenized_word = self.vocab.tokenize(word)
+            tokenized_script = np.vstack((tokenized_script, tokenized_word))
         return tokenized_script
     
     def _encode(self, tokenized_script):
-        encoded_script = []
-        for tokenized_word in tokenized_script:
-            encoded_word = self.vocab._encode_word(tokenized_word)
-            encoded_script.append(encoded_word)
+        encoded_script = self.vocab.encode_word(tokenized_script[0])
+        for tokenized_word in tokenized_script[1:]:
+            encoded_word = self.vocab.encode_word(tokenized_word)
+            encoded_script = np.vstack((encoded_script, encoded_word))
         return encoded_script
     
     def _cut_down_if_necessary(self, encoded_script):
@@ -74,10 +69,11 @@ class CustomText(Dataset):
         if len(cut_script) < self.max_len:
             pad_value = self.vocab.get_index("<pad>")
             while len(padded_script) < self.max_len:
-                padded_script.append(pad_value)
+                padded_script = np.vstack((padded_script, pad_value))
         return padded_script
     
     def _add_token(self, padded_script):
-        final_script = [self.vocab.get_index("<sos>")] + padded_script + [self.vocab.get_index("<eos>")]
+        final_script = np.array(padded_script)
+        final_script = np.vstack((self.vocab.get_index("<sos>"), padded_script, self.vocab.get_index("<eos>")))
         return final_script
     
