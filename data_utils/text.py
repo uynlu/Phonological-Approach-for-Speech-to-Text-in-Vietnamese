@@ -1,11 +1,10 @@
 from torch.utils.data import Dataset
 import json
-from dataset.text.vocabulary import Vocabulary
+from utils.text.vocab import Vocabulary
 import re
 import string
 import torch
 import numpy as np
-
 
 class CustomText(Dataset):
     def __init__(self, data_directory, max_len):
