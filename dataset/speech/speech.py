@@ -4,7 +4,6 @@ from torchaudio import transforms
 from torch.utils.data import Dataset
 import json
 import os
-# import torch
 import torch.nn.functional as F
 
 
@@ -77,7 +76,10 @@ class CustomSpeech(Dataset):
         mel = self.transformation(padded_signal)  # (num_channels, num_mels, num_samples)
         mel = mel.squeeze()  # (num_mels, num_samples)
         mel = mel.permute(1, 0)  # (num_samples, num_mels)
-        return mel
+
+        len_signal = cut_signal.size()[1]
+        
+        return mel, len_signal
 
     def _get_audio_path(self, index):
         file = (self.data[index][1]['voice']).replace(".mp3", ".wav")

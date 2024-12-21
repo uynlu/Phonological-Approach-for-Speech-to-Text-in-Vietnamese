@@ -1,440 +1,114 @@
-import re
-import numpy as np
+import torch
+import itertools
+
+from dataset.text.word_decomposition import is_Vietnamese, decompose_non_vietnamese_word, compose_word
 
 
-class Vocabulary:
+class PhonemeVocabv2:
     def __init__(self):
-        self.consonant_2_index = {
-            "": 0,
-            # Phụ âm
-            "b": 1,
-            "c": 2,
-            "d": 3,
-            "đ": 4,
-            "g": 5,
-            "h": 6,
-            "k": 7,
-            "l": 8,
-            "m": 9,
-            "n": 10,
-            "r": 11,
-            "s": 12,
-            "t": 13,
-            "v": 14,
-            "x": 15,
-            "ch": 16,
-            "gh": 17,
-            "ng": 18,
-            "tr": 19,
-            "qu": 20,
-            "ph": 21,
-            "th": 22,
-            "nh": 23,
-            "kh": 24,
-            "gi": 25,
-            "ngh": 26,
-            # Ngoại lệ
-            "1": 27,
-            "2": 28,
-            "3": 29,
-            "4": 30,
-            "5": 31,
-            "6": 32,
-            "7": 33,
-            "8": 34,
-            "9": 35,
-            "0": 36,
-            "<blank>": 37,
-            "<pad>": 38,
-            "<sos>": 39,
-            "<eos>": 40,
-            "Đắk": 41,
-            "Lắk": 42
-        }
+        self.pad_idx = 0
+        self.bos_idx = 1
+        self.eos_idx = 2
+        self.blank_idx = 3
 
-        self.vowel_2_index = {
-            "": 0,
+        onsets = [
+            'ngh', 'tr', 'th', 'ph', 'nh', 'ng', 'kh', 
+            'gi', 'gh', 'ch', 'q', 'đ', 'x', 'v', 't', 
+            's', 'r', 'n', 'm', 'l', 'k', 'h', 'g', 'd', 
+            'c', 'b'
+        ]
+        rhymes = [
             # a
-            "a": 1,
-            "ac": 2,
-            "ach": 3,
-            "ai": 4,
-            "am": 5,
-            "an": 6,
-            "ang": 7,
-            "anh": 8,
-            "ao": 9,
-            "ap": 10,
-            "at": 11,
-            "ay": 12,
-            "au": 13,
+            "a", "ac", "ach", "ai", 
+            "am", "an", "ang", "anh", 
+            "ao", "ap", "at", "ay", "au",
             # ă
-            "ă": 14,
-            "ăc": 15,
-            "ăm": 16,
-            "ăn": 17,
-            "ăng": 18,
-            "ăp": 19,
-            "ăt": 20,
+            "ă", "ăc", "ăm", "ăn", "ăng", "ăp", "ăt",
             # â
-            "â": 21,
-            "âc": 22,
-            "âm": 23,
-            "ân": 24,
-            "âng": 25,
-            "âp": 26,
-            "ât": 27,
-            "âu": 28,
-            "ây": 29,
+            "â", "âc", "âm", "ân", "âng",
+            "âp", "ât", "âu", "ây",
             # e
-            "e": 30,
-            "ec": 31,
-            "em": 32,
-            "en": 33,
-            "eng": 34,
-            "eo": 35,
-            "ep": 36,
-            "et": 37,
+            "e", "ec", "em", "en",
+            "eng", "eo", "ep", "et",
             # ê
-            "ê": 38,
-            "êch": 39,
-            "êm": 40,
-            "ên": 41,
-            "ênh": 42,
-            "êp": 43,
-            "êt": 44,
-            "êu": 45,
-            # i            
-            "i": 46,
-            "ia": 47,
-            "ich": 48,
-            "iêc": 49,
-            "iêm": 50,
-            "iên": 51,
-            "iêng": 52,
-            "iêp": 53,
-            "iêt": 54,
-            "iêu": 55,
-            "im": 56,
-            "in": 57,
-            "inh": 58,
-            "ip": 59,
-            "it": 60,
-            "iu": 61,
+            "ê", "êch", "êm", "ên", 
+            "ênh", "êp", "êt", "êu",
+            # i
+            "i", "ia", "ich", "iêc", "iêm", "iên",
+            "iêng", "iêp", "iêt", "iêu", "im", "in",
+            "inh", "ip", "it", "iu",
             # o
-            "o": 62,
-            "oa": 63,
-            "oac": 64,
-            "oach": 65,
-            "oai": 66,
-            "oam": 67,
-            "oan": 68,
-            "oang": 69,
-            "oanh": 70,
-            "oao": 71,
-            "oap": 72,
-            "oat": 73,
-            "oay": 74,
-            "oăc": 75,
-            "oăm": 76,
-            "oăn": 77,
-            "oăng": 78,
-            "oăt": 79,
-            "oc": 80,
-            "oe": 81,
-            "oen": 82,
-            "oeo": 83,
-            "oet": 84,
-            "oi": 85,
-            "om": 86,
-            "on": 87,
-            "ong": 88,
-            "ooc": 89,
-            "oong": 90,
-            "op": 91,
-            "ot": 92,
+            "o", "oa", "oac", "oach", "oai",
+            "oam", "oan", "oang", "oanh",
+            "oao", "oap", "oat", "oay",
+            "oăc", "oăm", "oăn", "oăng",
+            "oăt", "oc", "oe", "oen","oeo",
+            "oet", "oi", "om", "on", "ong",
+            "ooc", "oong", "op", "ot",
             # ô
-            "ô": 93,
-            "ôc": 94,
-            "ôi": 95,
-            "ôm": 96,
-            "ôn": 97,
-            "ông": 98,
-            "ôp": 99,
-            "ôt": 100,
+            "ô", "ôc", "ôi",
+            "ôm", "ôn", "ông",
+            "ôp", "ôt",
             # ơ
-            "ơ": 101,
-            "ơi": 102,
-            "ơm": 103,
-            "ơn": 104,
-            "ơp": 105,
-            "ơt": 106,
+            "ơ", "ơi", "ơm",
+            "ơn", "ơp", "ơt",
             # u
-            "u": 107,
-            "ua": 108,
-            "uân": 109,
-            "uâng": 110,
-            "uât": 111,
-            "uây": 112,
-            "uc": 113,
-            "uê": 114,
-            "uêch": 115,
-            "uênh": 116,
-            "ui": 117,
-            "um": 118,
-            "un": 119,
-            "ung": 120,
-            "uơ": 121,
-            "uôc": 122,
-            "uôi": 123,
-            "uôm": 124,
-            "uôn": 125,
-            "uông": 126,
-            "uôt": 127,
-            "up": 128,
-            "ut": 129,
-            "uy": 130,
-            "uya": 131,
-            "uych": 132,
-            "uyên": 133,
-            "uyêt": 134,
-            "uyn": 135,
-            "uynh": 136,
-            "uyp": 137,
-            "uyt": 138,
-            "uyu": 139,
+            "u", "ua", "uân", "uâng", "uât",
+            "uây", "uc", "uê", "uêch", "uênh",
+            "ui", "um", "un", "ung", "uơ", "uôc",
+            "uôi", "uôm", "uôn", "uông", "uôt",
+            "up", "ut", "uy", "uya", "uych",
+            "uyên", "uyêt", "uyn", "uynh",
+            "uyp", "uyt", "uyu",
             # ư
-            "ư": 140,
-            "ưa": 141,
-            "ưc": 142,
-            "ưi": 143,
-            "ưng": 144,
-            "ươc": 145,
-            "ươi": 146,
-            "ươm": 147,
-            "ươn": 148,
-            "ương": 149,
-            "ươp": 150,
-            "ươt": 151,
-            "ươu": 152,
-            "ưt": 153,
-            "ưu": 154,
+            "ư", "ưa", "ưc", "ưi",
+            "ưng", "ươc", "ươi",
+            "ươm", "ươn", "ương",
+            "ươp", "ươt", "ươu",
+            "ưt", "ưu",
             # y
-            "y": 155,
-            "yêm": 156,
-            "yên": 157,
-            "yêng": 158,
-            "yêt": 159,
-            "yêu": 160,
+            "y", "yêm", "yên", 
+            "yêng", "yêt", "yêu"
+        ]
+        codas = ['ng', 'nh', 'ch', 'u', 'n', 'o', 'p', 'c', 'k', 'm', 'y', 'i', 't']
+        tones = ['<huyền>', '<sắc>', '<ngã>', '<hỏi>', '<nặng>']
+        phonemes = onsets + rhymes + codas + tones
+        self.phoneme2idx = {
+            phoneme: idx for idx, phoneme in enumerate(phonemes, start=4)
         }
+        self.idx2phoneme = {idx: phoneme for phoneme, idx in self.phoneme2idx.items()}
 
-        self.tone_2_index = {
-            "": 0,
-            "ngang": 1,
-            "sắc": 2,
-            "huyền": 3,
-            "hỏi": 4,
-            "ngã": 5,
-            "nặng": 6,
-        }
-
-        self.index_2_consonant = {i: c for c, i in self.consonant_2_index.items()}
-        self.index_2_vowel = {i: v for v, i in self.vowel_2_index.items()}
-        self.index_2_tone = {i: t for t, i in self.tone_2_index.items()}
-
-    def __len__(self):
-        consonants = list(self.consonant_2_index.keys())[:27]
-        vowels = list(self.vowel_2_index.keys())
-        tone = list(self.tone_2_index.keys())
-        exception = list(self.consonant_2_index.keys())[27:]
-        return len(consonants) * len(vowels) * len(tone) + len(exception)
-
-    def len(self):
-        return len(self.consonant_2_index), len(self.vowel_2_index), len(self.tone_2_index)
-    
-    def get_index(self, word):
-        tokenized_word = self._tokenize(word)
-        encoded_word = self._encode_word(tokenized_word)
-        return encoded_word
-
-    def get_word(self, index):
-        item_of_word = self.encode_index(index)
-        word = self._merge_item_of_word(item_of_word)
-        return word
-    
-    def tokenize(self, word):
-        return self._tokenize(word)
-    
-    def encode_word(self, tokenized_word):
-        return np.array([self.consonant_2_index.get(tokenized_word[0]), self.vowel_2_index.get(tokenized_word[1]), self.tone_2_index.get(tokenized_word[2])])
-    
-    def _is_number(self, word):
-        try:
-            float(word)
-            return True
-        except ValueError:
-            return False
-    
-    def _is_special_character(self, word):
-        if word in list(self.consonant_2_index.keys())[27:]:
-            return True
-        else:
-            return False
-    
-    def _is_Vietnamese(self, word):
-        if word[:1] in ["b", "c", "d", "đ", "g", "h", "k", "l", "m", "n", "p", "q", "r", "s", "t", "v", "x"]:
-            if word[:2] in ["ch", "gh", "ng", "tr", "qu", "ph", "th", "nh", "kh", "gi"]:
-                if word[:3] == "ngh":
-                    num_consonant = 3
-                else:
-                    num_consonant = 2
+    def encode_script(self, script: str):
+        script = script.lower()
+        words = script.split()
+        word_components = []
+        for word in words:
+            is_Vietnamese_word, components = is_Vietnamese(word)
+            if is_Vietnamese_word:
+                word_components.append(components)
             else:
-                num_consonant = 1
-        else:
-            num_consonant = 0
-        
-        map_tone = {
-            "á": "a", "à": "a", "ả": "a", "ã": "a", "ạ": "a",
-            "ắ": "ă", "ằ": "ă", "ẳ": "ă", "ẵ": "ă", "ặ": "ă",
-            "ấ": "â", "ầ": "â", "ẩ": "â", "ẫ": "â", "ậ": "â",
-            "í": "i", "ì": "i", "ỉ": "i", "ĩ": "i", "ị": "i",
-            "ý": "y", "ỳ": "y", "ỷ": "y", "ỹ": "y", "ỵ": "y",
-            "ó": "o", "ò": "o", "ỏ": "o", "õ": "o", "ọ": "o",
-            "ố": "ô", "ồ": "ô", "ổ": "ô", "ỗ": "ô", "ộ": "ô",
-            "ớ": "ơ", "ờ": "ơ", "ở": "ơ", "ỡ": "ơ", "ợ": "ơ",
-            "é": "e", "è": "e", "ẻ": "e", "ẽ": "e", "ẹ": "e",
-            "ế": "ê", "ề": "ê", "ể": "ê", "ễ": "ê", "ệ": "ê",
-            "ú": "u", "ù": "u", "ủ": "u", "ũ": "u", "ụ": "u",
-            "ứ": "ư", "ừ": "ư", "ử": "ư", "ữ": "ư", "ự": "ư"
-        }
-        character_vowel = []
-        for character in word[num_consonant:]:
-            transformed_character = map_tone.get(character, character)
-            character_vowel.append(transformed_character)
-        vowel = "".join(character_vowel)
+                word_components.append(decompose_non_vietnamese_word(word))
 
-        if vowel in list(self.vowel_2_index.keys()):
-            return True
-        else:
-            return False
-    
-    # Tokenize
-    def _tokenize(self, word):
-        if self._is_number(word):
-            tokenized_word = self._tokenize_number(word)
-        elif self._is_special_character(word):
-            tokenized_word = self._tokenize_special_character(word)
-        elif self._is_Vietnamese(word) == False:
-            tokenized_word = self._tokenize_non_vietnamese_word(word)
-        else:
-            tokenized_word = self._tokenize_vietnamese_word(word)
-        return tokenized_word
-    
-    def _tokenize_number(self, word):
-        tokenized_word = []
-        for character in word:
-            tokenized_word.append([character, "", ""])
-        tokenized_word = np.array(tokenized_word)
-        return tokenized_word
-    
-    def _tokenize_special_character(self, word):
-        tokenized_word = [word, "", ""]
-        tokenized_word = (np.array(tokenized_word)).reshape(1, 3)
-        return tokenized_word
-    
-    def _tokenize_non_vietnamese_word(self, word):
-        tokenized_word = []
-        for character in word:
-            if character in list(self.consonant_2_index.keys())[:27]:
-                tokenized_word.append([character, "", ""])
-            elif character in list(self.vowel_2_index.keys()):
-                tokenized_word.append(["", character, ""])
-        tokenized_word = np.array(tokenized_word)
-        return tokenized_word
+        phoneme_script = []
+        for ith in range(len(words)):
+            word_component = word_components[ith]
+            onset, medial, nucleus, coda, tone = word_component
+            vowel = compose_word(None, medial, nucleus, coda, None)
+            phoneme_script.extend([
+                self.phoneme2idx[onset] if onset else self.blank_idx, 
+                self.phoneme2idx[vowel] if vowel else self.blank_idx, 
+                self.phoneme2idx[tone] if tone else self.blank_idx, 
+                self.blank_idx])
+        print(phoneme_script)
+        vec = torch.tensor(phoneme_script[:-1]).long() # remove the last blank token
+        print(vec)
+        return vec
 
-    def _tokenize_vietnamese_word(self, word):
-        tokenized_word = []
-        # Lấy phụ âm
-        if word[:1] in ["b", "c", "d", "đ", "g", "h", "k", "l", "m", "n", "p", "q", "r", "s", "t", "v", "x"]:
-            if word[:2] in ["ch", "gh", "ng", "tr", "qu", "ph", "th", "nh", "kh", "gi"]:
-                if word[:3] == "ngh":
-                    tokenized_word.append(word[:3])
-                    num_consonant = 3
-                else:
-                    tokenized_word.append(word[:2])
-                    num_consonant = 2
-            else:
-                tokenized_word.append(word[:1])
-                num_consonant = 1
-        else:  # không có phụ âm
-            tokenized_word.append("")
-            num_consonant = 0
-            
-        # Lấy vần
-        map_tone = {
-            "á": "a", "à": "a", "ả": "a", "ã": "a", "ạ": "a",
-            "ắ": "ă", "ằ": "ă", "ẳ": "ă", "ẵ": "ă", "ặ": "ă",
-            "ấ": "â", "ầ": "â", "ẩ": "â", "ẫ": "â", "ậ": "â",
-            "í": "i", "ì": "i", "ỉ": "i", "ĩ": "i", "ị": "i",
-            "ý": "y", "ỳ": "y", "ỷ": "y", "ỹ": "y", "ỵ": "y",
-            "ó": "o", "ò": "o", "ỏ": "o", "õ": "o", "ọ": "o",
-            "ố": "ô", "ồ": "ô", "ổ": "ô", "ỗ": "ô", "ộ": "ô",
-            "ớ": "ơ", "ờ": "ơ", "ở": "ơ", "ỡ": "ơ", "ợ": "ơ",
-            "é": "e", "è": "e", "ẻ": "e", "ẽ": "e", "ẹ": "e",
-            "ế": "ê", "ề": "ê", "ể": "ê", "ễ": "ê", "ệ": "ê",
-            "ú": "u", "ù": "u", "ủ": "u", "ũ": "u", "ụ": "u",
-            "ứ": "ư", "ừ": "ư", "ử": "ư", "ữ": "ư", "ự": "ư"
-        }
-        character_vowel = []
-        for character in word[num_consonant:]:
-            transformed_character = map_tone.get(character, character)
-            character_vowel.append(transformed_character)
-        vowel = "".join(character_vowel)
-        tokenized_word.append(vowel)
-
-        # Lấy thanh điệu
-        for index, character in enumerate(word[num_consonant:]):
-            if re.match(r"[áắấíýóốớéếúứ]", character):
-                tokenized_word.append("sắc")
-                break
-            elif re.match(r"[àằầìỳòồờèềùừ]", character):
-                tokenized_word.append("huyền")
-                break
-            elif re.match(r"[ảẳẩỉỷỏổởẻểủử]", character):
-                tokenized_word.append("hỏi")
-                break
-            elif re.match(r"[ãẵẫĩỹõỗỡẽễũữ]", character):
-                tokenized_word.append("ngã")
-                break
-            elif re.match(r"[ạặậịỵọộợẹệụự]", character):
-                tokenized_word.append("nặng")
-                break
-            if index == len(word[num_consonant:]) - 1:
-                tokenized_word.append("ngang")
-
-        tokenized_word = (np.array(tokenized_word)).reshape(1, 3)
-
-        return tokenized_word
-
-    def _encode_word(self, tokenized_word):
-        encoded_word = []
-        for item in tokenized_word:
-            encoded_word.append([self.consonant_2_index.get(item[0]), self.vowel_2_index.get(item[1]), self.tone_2_index.get(item[2])])
-        return np.array(encoded_word)
-
-    def encode_index(self, index):
-        return [self.index_2_consonant.get(index[0]), self.index_2_vowel.get(index[1]), self.index_2_tone.get(index[2])]
-    
-    def _merge_item_of_word(self, item_of_word):
-        if item_of_word[-1] == "ngang":
-            return "".join((item_of_word[0], item_of_word[1]))
-        elif item_of_word[-1] == "sắc":
-            pass
-        elif item_of_word[-1] == "huyền":
-            pass
-        elif item_of_word[-1] == "hỏi":
-            pass
-        elif item_of_word[-1] == "ngã":
-            pass
-        elif item_of_word[-1] == "nặng":
-            pass
+    def decode_script(self, tensor_script: torch.Tensor):
+        '''
+            tensorscript: (1, seq_len)
+        '''
+        # remove duplicated token
+        tensor_script = tensor_script.squeeze(0).long().tolist()
+        script = [self.idx2phoneme[idx] for idx in tensor_script]
+        script = ' '.join([k for k, _ in itertools.groupby(script)])
