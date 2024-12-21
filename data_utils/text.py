@@ -1,10 +1,10 @@
 from torch.utils.data import Dataset
 import json
-from utils.text.vocab import Vocabulary
-import re
-import string
+from data_utils.phoneme_vocab import PhonemeVocabv2
+# import re
+# import string
 import torch
-import numpy as np
+# import numpy as np
 
 class CustomText(Dataset):
     def __init__(self, data_directory, max_len):
@@ -14,65 +14,53 @@ class CustomText(Dataset):
             data = json.load(file)
         self.data = list(data.items())
 
-        self.vocab = Vocabulary()
+        self.vocab = PhonemeVocabv2()
         self.max_len = max_len
 
     def __len__(self):
         return len(self.data)
     
     def __getitem__(self, index):
-        script = self._get_script(index)
-        lowered_script = self._lower(script)
-        removed_script = self._remove_special_characters(lowered_script)
-        tokenized_script = self._tokenize(removed_script)
-        encoded_script = self._encode(tokenized_script)
-        cut_script = self._cut_down_if_necessary(encoded_script)
-        padded_script = self._pad_if_necessary(cut_script)
-        final_script = self._add_token(padded_script)
-        return torch.tensor(final_script, dtype=torch.long)
+        script = self.get_script(index)
+        script = self.encode(script)
+        script = self.cut_down_if_necessary(script)
+        script = self.add_token(script)
+        script = self.pad_if_necessary(script)
+        return script
     
-    def _get_script(self, index):
+    def get_script(self, index):
         return self.data[index][1]["script"]
     
-    def _lower(self, script):
-        lowered_script = script.lower()
-        return lowered_script
+    # def _lower(self, script):
+    #     lowered_script = script.lower()
+    #     return lowered_script
     
-    def _remove_special_characters(self, lowered_script):
-        pattern = f"[{re.escape(string.punctuation)}]"
-        removed_script = re.sub(pattern, "", lowered_script) 
-        return removed_script
+    # def _remove_special_characters(self, lowered_script):
+    #     pattern = f"[{re.escape(string.punctuation)}]"
+    #     removed_script = re.sub(pattern, "", lowered_script) 
+    #     return removed_script
 
-    def _tokenize(self, removed_script):
-        tokenized_script = self.vocab.tokenize(removed_script.split()[0])
-        for word in removed_script.split()[1:]:
-            tokenized_word = self.vocab.tokenize(word)
-            tokenized_script = np.vstack((tokenized_script, tokenized_word))
-        return tokenized_script
+    # def _tokenize(self, removed_script):
+    #     tokenized_script = self.vocab.tokenize(removed_script.split()[0])
+    #     for word in removed_script.split()[1:]:
+    #         tokenized_word = self.vocab.tokenize(word)
+    #         tokenized_script = np.vstack((tokenized_script, tokenized_word))
+    #     return tokenized_script
     
-    def _encode(self, tokenized_script):
-        encoded_script = self.vocab.encode_word(tokenized_script[0])
-        for tokenized_word in tokenized_script[1:]:
-            encoded_word = self.vocab.encode_word(tokenized_word)
-            encoded_script = np.vstack((encoded_script, encoded_word))
-        return encoded_script
+    def encode(self, script):
+        return self.vocab.encode_script(script)
     
-    def _cut_down_if_necessary(self, encoded_script):
-        cut_script = encoded_script.copy()
-        if len(encoded_script) > self.max_len:
-            cut_script = encoded_script[:self.max_len]
-        return cut_script
+    def cut_down_if_necessary(self, script):
+        if len(script) > self.max_len - 2:
+            script = script[:self.max_len]
+        return script
     
-    def _pad_if_necessary(self, cut_script):
-        padded_script = cut_script.copy()
-        if len(cut_script) < self.max_len:
-            pad_value = self.vocab.get_index("<pad>")
-            while len(padded_script) < self.max_len:
-                padded_script = np.vstack((padded_script, pad_value))
-        return padded_script
+    def add_token(self, script):
+        return torch.cat((torch.tensor([self.vocab.bos_idx]), script, torch.tensor([self.vocab.eos_idx])))
     
-    def _add_token(self, padded_script):
-        final_script = np.array(padded_script)
-        final_script = np.vstack((self.vocab.get_index("<sos>"), padded_script, self.vocab.get_index("<eos>")))
-        return final_script
+    def pad_if_necessary(self, script):
+        pad_value = torch.tensor([self.vocab.pad_idx])
+        while len(script) < self.max_len:
+            script = torch.cat((script, pad_value))
+        return script
     
