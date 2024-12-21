@@ -265,17 +265,18 @@ def compose_word(onset: str, medial: str, nucleus: str, coda: str, tone: str) ->
             '<hỏi>': '\u0309',
             '<nặng>': '\u0323'
         }
-    tone = tone_map[tone]
+    if tone is not None:
+        tone = tone_map[tone]
 
-    # process for the special case of medial + coda (hỏa, thủy, thuở, thỏa, ...)
-    # in this case, only "thuở" follows the general rule of tone marking, the others are the case that tones are marked on the medial.
-    if onset != "q" and medial is not None and nucleus is not None and coda is None and nucleus != "ơ":
-        medial += tone
-    else:
-        if coda is None:
-            nucleus = nucleus[0] + tone + nucleus[1:]
+        # process for the special case of medial + coda (hỏa, thủy, thuở, thỏa, ...)
+        # in this case, only "thuở" follows the general rule of tone marking, the others are the case that tones are marked on the medial.
+        if onset != "q" and medial is not None and nucleus is not None and coda is None and nucleus != "ơ":
+            medial += tone
         else:
-            nucleus = nucleus + tone
+            if coda is None:
+                nucleus = nucleus[0] + tone + nucleus[1:]
+            else:
+                nucleus = nucleus + tone
 
     word = ""
     if onset:
