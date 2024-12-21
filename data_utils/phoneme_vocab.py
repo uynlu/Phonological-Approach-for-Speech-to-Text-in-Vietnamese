@@ -197,7 +197,7 @@ class PhonemeVocabv2:
                 self.phoneme2idx[tone] if tone else self.blank_idx, 
                 self.blank_idx])
         
-        vec = torch.tensor(phoneme_script[-1]).long() # remove the last blank token
+        vec = torch.tensor(phoneme_script[:-1]).long() # remove the last blank token
 
         return vec
 
