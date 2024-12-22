@@ -233,6 +233,7 @@ def is_Vietnamese(word: str) -> tuple[bool, tuple]:
     if nucleus == coda:
         return False, None
 
+    print((onset, medial, nucleus, coda, tone))
     return True, (onset, medial, nucleus, coda, tone)
 
 def decompose_non_vietnamese_word(word: str):
