@@ -1,9 +1,60 @@
+import json
 import torch
 import itertools
 import re
 import string
 
 from dataset.text.word_decomposition import is_Vietnamese, decompose_non_vietnamese_word, compose_word
+
+
+class Vocabulary:
+    def __init__(self, paths):
+        self.make_vocab(paths)
+        self.make_idx()
+
+    def __len__(self):
+        return len(self.vocab) + 4
+
+    def __getitem__(self, word):
+        return self.word2idx.get(word, self.unk_idx)
+
+    def __contains__(self, word):
+        return word in self.word2idx
+
+    def make_vocab(self, paths):
+        self.vocab = set()
+        self.max_len = 0
+        for path in paths:
+            with open(path, mode="r", encoding="utf-8") as file:
+                data = json.load(file)
+            data = list(data.items())
+            for index in range(len(data)):
+                sentence = data[index][1]['script']
+                tokens = sentence.strip().split()
+                if len(tokens) > self.max_len:
+                    self.max_len = len(tokens)
+                self.vocab.update(tokens)
+        self.vocab = list(self.vocab)
+
+    def make_idx(self):
+        self.word2idx = {w: i for i, w in enumerate(self.vocab, 5)}
+        self.pad_idx = 0
+        self.bos_idx = 1
+        self.eos_idx = 2
+        self.blank_idx = 3
+        self.unk_idx = 4
+        self.idx2word = {i: w for w, i in self.word2idx.items()}
+
+    def encode_script(self, script):
+        encoded_script = []
+        script = script.lower()
+        pattern = f"[{re.escape(string.punctuation)}]"
+        script = re.sub(pattern, "", script) 
+        words = script.split()
+        for word in words:
+            encoded_word = self.word2idx.get(word, self.unk_idx)
+            encoded_script.append(encoded_word)
+        return torch.tensor(encoded_script).long()
 
 
 class PhonemeVocabv2:
