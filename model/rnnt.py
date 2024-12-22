@@ -1,9 +1,7 @@
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-from dataset.text.vocabulary import Vocabulary
-import numpy as np
-from torchaudio.functional import rnnt_loss
+from speechbrain.nnet.loss.transducer_loss import TransducerLoss
 
 
 # Acoustic model
@@ -31,27 +29,19 @@ class Encoder(nn.Module):
 
 # Language model
 class Decoder(nn.Module):
-    def __init__(self, vocab, embedding_size, hidden_size, num_layers, dropout_prob):
+    def __init__(self, vocab, hidden_size, num_layers, dropout_prob):
         super(Decoder, self).__init__()
         self.vocab = vocab
-        self.embedding_size = embedding_size
+        self.embedding_size = len(self.vocab) - 4
         self.hidden_size = hidden_size
         self.num_layers = num_layers
         self.dropout_prob = dropout_prob
-        self.start_symbol = self.vocab.get_index("<sos>")  # self.start_symbol.shape: (1, 3) ([[41, 163, 9]])
+        self.start_symbol = self.vocab.bos_idx
 
-        self.embedding_consonant = nn.Embedding(
-            num_embeddings=self.vocab.len()[0],
+        self.embedding = nn.Embedding(
+            num_embeddings=len(self.vocab),
             embedding_dim=self.embedding_size,
-            padding_idx=self.vocab.consonant_2_index.get("<pad>")
-        )
-        self.embedding_vowel = nn.Embedding(
-            num_embeddings=self.vocab.len()[1],
-            embedding_dim=self.embedding_size
-        )
-        self.embedding_tone = nn.Embedding(
-            num_embeddings=self.vocab.len()[2],
-            embedding_dim=self.embedding_size
+            padding_idx=self.vocab.pad_idx
         )
 
         self.dropout = nn.Dropout(dropout_prob)
@@ -66,48 +56,36 @@ class Decoder(nn.Module):
             bidirectional=True
         )
     
-    def forward(self, inputs):  # inputs.size(): (batch_size, text_len, 3)
+    def forward(self, inputs):  # inputs.size(): (batch_size, text_len)
         batch_size = inputs.size()[0]
         text_len = inputs.size()[1]
-        
+        hidden_state = torch.zeros(self.num_layers * 2, batch_size, self.hidden_size)
+        cell = torch.zeros(self.num_layers * 2, batch_size, self.hidden_size)
         outputs = []
         for i in range(text_len + 1):
-            if i == 0:
-                decoder_input = torch.tensor([self.start_symbol] * batch_size)
-                hidden_state, cell = self._init_hidden_state(batch_size)
-            else:
-                decoder_input = inputs[:, i-1, :].unsqueeze(1)
-            output, hidden_state, cell = self._forward_one_step(decoder_input, hidden_state, cell)
+            # if i == 0:
+            #     decoder_input = torch.tensor([self.start_symbol] * batch_size, device=inputs.device)
+            # else:
+            decoder_input = inputs[:, i].unsqueeze(-1)
+            output, hidden_state, cell = self.forward_one_step(decoder_input, hidden_state, cell)
             outputs.append(output)
-        outputs = torch.stack(outputs, dim=1)  # outputs.size(): (batch_size, text_len + 1, 3, hidden_size * 2)
+        outputs = torch.stack(outputs, dim=1)  # outputs.size(): (batch_size, text_len + 1, hidden_size * 2)
 
         return outputs
 
 
-    def _forward_one_step(
+    def forward_one_step(
             self,
-            input,  # input.size(): (batch_size, 1, 3)
-            hidden_state,  # hidden_state.size(): num_layers * 2, batch_size, hidden_size
-            cell  # cell.size(): num_layers * 2, batch_size, hidden_size
+            input,  # input.size(): (batch_size, 1)
+            previous_hidden_state,  # hidden_state.size(): num_layers * 2, batch_size, hidden_size
+            previos_cell
         ):
-        embedded_consonant = (self.dropout(self.embedding_consonant(input[:, :, 0].unsqueeze(-1)))).squeeze(2)  # embedded_consonant.size(): (batch_size, 1, embedding_size)
-        embedded_vowel = (self.dropout(self.embedding_vowel(input[:, :, 1].unsqueeze(-1)))).squeeze(2) # embedded_vowel.size(): (batch_size, 1, embedding_size)
-        embedded_tone = (self.dropout(self.embedding_tone(input[:, :, 2].unsqueeze(-1)))).squeeze(2)   # embedded_tone.size(): (batch_size, 1, embedding_size)
-        embedding_output = torch.cat([embedded_consonant, embedded_vowel, embedded_tone], dim=1)  # embedding_outputs.size(): (batch_size, 3, embedding_size)
-
-        output, (hidden_state, cell) = self.lstm(embedding_output, (hidden_state, cell))
-        # output.size(): (batch_size, 3, 2 * hidden_size)
+        embeddeding = (self.dropout(self.embedding(input)))  # embeddeding.size(): (batch_size, 1, embedding_size)
+        output, (hidden_state, cell) = self.lstm(embeddeding, (previous_hidden_state, previos_cell))
+        # output.size(): (batch_size, 1, 2 * hidden_size)
         # hidden_state.size(): (2 * num_layers, batch_size, hidden_size)
-        # cell.size(): (2 * num_layers, batch_size, hidden_size)
 
         return output, hidden_state, cell
-
-    def _init_hidden_state(self, batch_size):
-        hidden_state, cell = (
-            torch.zeros((self.num_layers * 2, batch_size, self.hidden_size)),
-            torch.zeros((self.num_layers * 2, batch_size, self.hidden_size))
-        )
-        return hidden_state, cell
 
 
 class Joiner(nn.Module):
@@ -123,53 +101,32 @@ class Joiner(nn.Module):
         self.vocab = vocab
         self.join = self.MODES[mode]
 
-        self.linear_consonant = nn.Linear(
+        self.linear = nn.Linear(
             in_features=hidden_size * 2,
-            out_features=self.vocab.len()[0]
-        )
-        self.linear_vowel = nn.Linear(
-            in_features=hidden_size * 2,
-            out_features=self.vocab.len()[1]
-        )
-        self.linear_tone = nn.Linear(
-            in_features=hidden_size * 2,
-            out_features=self.vocab.len()[2]
+            out_features=len(self.vocab)
         )
 
     def forward(
             self,
             outputs_encoder,  # outputs_encoder.size(): (batch_size, num_samples, hidden_size * 2)
-            outputs_decoder,  # outputs_decoder.size(): (batch_size, text_len + 1, 3, hidden_size * 2)
+            outputs_decoder,  # outputs_decoder.size(): (batch_size, text_len + 1, hidden_size * 2)
         ):
         outputs_encoder = outputs_encoder.unsqueeze(2)  # outputs_encoder.size(): (batch_size, num_samples, 1, hidden_size * 2)
+        outputs_decoder = outputs_decoder.unsqueeze(1)  # outputs_decoder.size(): (batch_size, 1, text_len + 1, hidden_size * 2)
 
-        consonants_decoder = outputs_decoder[:, :, 0, :]  # consonants_decoder.size(): (batch_size, text_len + 1, hidden_size * 2)
-        vowels_decoder = outputs_decoder[:, :, 1, :]  # vowels_decoder.size(): (batch_size, text_len + 1, hidden_size * 2)
-        tones_decoder = outputs_decoder[:, :, 2, :]  # tones_decoder.size(): (batch_size, text_len + 1, hidden_size * 2)
+        outputs = self.join(outputs_encoder, outputs_decoder)  # outputs.size(): (batch_size, num_samples, text_len + 1, hidden_size * 2)
 
-        consonants_decoder = consonants_decoder.unsqueeze(1)  # consonants_decoder.size(): (batch_size, 1, text_len + 1, hidden_size * 2)
-        vowels_decoder = vowels_decoder.unsqueeze(1)  # vowels_decoder.size(): (batch_size, 1, text_len + 1, hidden_size * 2)
-        tones_decoder = tones_decoder.unsqueeze(1)  # tones_decoder.size(): (batch_size, 1, text_len + 1, hidden_size * 2)
-
-        outputs_consonant = self.join(outputs_encoder, consonants_decoder)  # outputs_consonant.size(): (batch_size, num_samples, text_len + 1, hidden_size * 2)
-        outputs_vowel = self.join(outputs_encoder, vowels_decoder)  # outputs_vowel.size(): (batch_size,  num_samples, text_len + 1, hidden_size * 2)
-        outputs_tone = self.join(outputs_encoder, tones_decoder)  # outputs_tone.size(): (batch_size, num_samples, text_len + 1, hidden_size * 2)
-
-        outputs_consonant = self.linear_consonant(outputs_consonant)  # outputs_consonant.size(): (batch_size, num_samples, text_len + 1, num_consonants)
-        outputs_vowel = self.linear_vowel(outputs_vowel)  # outputs_vowel.size(): (batch_size, num_samples, text_len + 1, num_vowels)
-        outputs_tone = self.linear_tone(outputs_tone)  # outputs_tone.size(): (batch_size, num_samples, text_len + 1, num_tones)
+        outputs = self.linear(outputs)  # outputs.size(): (batch_size, num_samples, text_len + 1, len_vocab)
         
-        # outputs_consonant = F.softmax(outputs_consonant, dim=-1)  # outputs_consonant.size(): (batch_size, num_samples, text_len + 1, num_consonants)
-        # outputs_vowel = F.softmax(outputs_vowel, dim=-1)  # outputs_vowel.size(): (batch_size, num_samples, text_len + 1, num_vowels)
-        # outputs_tone = F.softmax(outputs_tone, dim=-1)  # outputs_tone.size(): (batch_size, num_samples, text_len + 1, num_tones)
+        outputs = F.softmax(outputs, dim=-1)
 
-        return outputs_consonant, outputs_vowel, outputs_tone
+        return outputs
 
 
 class RNNT(nn.Module):
-    def __init__(self, input_size, hidden_size = 512, num_layers_encoder = 5, embedding_size = 1, num_layers_decoder = 2, dropout_prob = 0.2, mode = "additive"):
+    def __init__(self, vocab, input_size, hidden_size = 512, num_layers_encoder = 5, num_layers_decoder = 2, dropout_prob = 0.2, mode = "additive"):
         super(RNNT, self).__init__()
-        self.vocab = Vocabulary()
+        self.vocab = vocab
         self.encoder = Encoder(
             input_size,
             hidden_size = hidden_size,
@@ -178,7 +135,6 @@ class RNNT(nn.Module):
         )
         self.decoder = Decoder(
             vocab=self.vocab,
-            embedding_size = embedding_size,
             hidden_size = hidden_size,
             num_layers = num_layers_decoder,
             dropout_prob = dropout_prob
@@ -197,48 +153,35 @@ class RNNT(nn.Module):
             targets
         ):
         outputs_encoder = self.encoder(inputs)
-        outputs_decoder = self.decoder(targets)
+        outputs_decoder = self.decoder.forward(targets)
         outputs_joiner = self.joiner(outputs_encoder, outputs_decoder)
 
-        consonant_joiner = outputs_joiner[0]  # consonant_joiner.size(): (batch_size, num_samples, text_len + 1, num_consonants)
-        vowel_joiner = outputs_joiner[1]  # vowel_joiner.size(): (batch_size, num_samples, text_len + 1, num_vowels)
-        tone_joiner = outputs_joiner[2]  # tone_joiner.size(): (batch_size, num_samples, text_len + 1, num_tones)
+        transducer_loss = TransducerLoss(self.vocab.blank_idx)
+        loss = transducer_loss(outputs_joiner, targets, signal_len, text_len)
+        return loss
 
-        consonant_target = targets[:, :, 0]
-        vowel_target = targets[:, :, 1]
-        tone_target = targets[:, :, 2]
-
-        
-        logit_lengths = torch.full((consonant_joiner.size(0),), consonant_joiner.size(1), dtype=torch.long)
-        target_lengths = torch.full((consonant_joiner.size(0),), consonant_joiner.size(2), dtype=torch.long)
-        
-        print(consonant_target.size())
-        print(signal_len)
-        loss_consonant = rnnt_loss(
-            logits=consonant_joiner,
-            targets=consonant_target.int(),
-            logit_lengths=logit_lengths.int(),
-            target_lengths=target_lengths.int(),
-            blank=self.vocab.get_index("<blank>")[0][0],
-            reduction="mean"
-        )
-        loss_vowel = rnnt_loss(
-            logits=vowel_joiner,
-            targets=vowel_target.int(),
-            logit_lengths=logit_lengths.int(),
-            target_lengths=target_lengths.int(),
-            blank=self.vocab.get_index("<blank>")[0][1],
-            reduction="mean"
-        )
-        loss_tone = rnnt_loss(
-            logits=tone_joiner,
-            targets=tone_target.int(),
-            logit_lengths=logit_lengths.int(),
-            target_lengths=target_lengths.int(),
-            blank=self.vocab.get_index("<blank>")[0][2],
-            reduction="mean"
-        )
-        return loss_consonant, loss_vowel, loss_tone
+    def greedy_decode(self, signals, signal_lens, max_len):
+        outputs_batch = []
+        batch_size = signals.size()[0]
+        outputs_encoder = self.encoder(signals)
+        for b in range(batch_size):
+            t = 0
+            u = 0
+            outputs = [self.decoder.start_symbol]
+            hidden_state = self.decoder.initial_state.unsqueeze(0)
+            while t < signal_lens[b] and u < max_len:
+                decoder_input = torch.tensor([outputs[-1]], device = signals.device)
+                output, hidden_state = self.decoder.forward_one_step(decoder_input, hidden_state)
+                feature_t = outputs_encoder[b, t]
+                output_joiner = self.joiner.forward(feature_t, output)
+                argmax = output_joiner.max(-1)[1].item()
+                if argmax == self.vocab.blank_idx:
+                    t += 1
+                else: # argmax == a label
+                    u += 1
+                    outputs.append(argmax)
+            outputs_batch.append(outputs[1:-1])
+        return outputs_batch
 
     # def forward(self, inputs, max_len): => def decode?
     #     batch_size, num_samples, num_mels = inputs.size()
