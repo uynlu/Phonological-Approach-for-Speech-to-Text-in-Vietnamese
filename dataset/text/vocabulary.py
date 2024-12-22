@@ -1,5 +1,7 @@
 import torch
 import itertools
+import re
+import string
 
 from dataset.text.word_decomposition import is_Vietnamese, decompose_non_vietnamese_word, compose_word
 
@@ -60,6 +62,11 @@ class PhonemeVocabv2:
             "up", "ut", "uy", "uya", "uych",
             "uyên", "uyêt", "uyn", "uynh",
             "uyp", "uyt", "uyu",
+
+            "uach", "uai", "uan", "uang", "uanh", "uao", "uat", "uau", "uay",
+            "uăc", "uăm", "uăn", "uăng", "uăp", "uăt", "uâc", "uât",
+            "ue", "uen", "ueo", "uet", "uên", "uêt", "uêu",
+
             # ư
             "ư", "ưa", "ưc", "ưi",
             "ưng", "ươc", "ươi",
@@ -78,12 +85,20 @@ class PhonemeVocabv2:
         }
         self.idx2phoneme = {idx: phoneme for phoneme, idx in self.phoneme2idx.items()}
 
+    def __len__(self):
+        return len(self.phoneme2idx) + 4
+    
     def encode_script(self, script: str):
         script = script.lower()
+        pattern = f"[{re.escape(string.punctuation)}]"
+        script = re.sub(pattern, "", script) 
         words = script.split()
         word_components = []
+        is_Vietnamese_words = []
+
         for word in words:
             is_Vietnamese_word, components = is_Vietnamese(word)
+            is_Vietnamese_words.append(is_Vietnamese_word)
             if is_Vietnamese_word:
                 word_components.append(components)
             else:
@@ -92,16 +107,25 @@ class PhonemeVocabv2:
         phoneme_script = []
         for ith in range(len(words)):
             word_component = word_components[ith]
-            onset, medial, nucleus, coda, tone = word_component
-            vowel = compose_word(None, medial, nucleus, coda, None)
-            phoneme_script.extend([
-                self.phoneme2idx[onset] if onset else self.blank_idx, 
-                self.phoneme2idx[vowel] if vowel else self.blank_idx, 
-                self.phoneme2idx[tone] if tone else self.blank_idx, 
-                self.blank_idx])
-        print(phoneme_script)
-        vec = torch.tensor(phoneme_script[:-1]).long() # remove the last blank token
-        print(vec)
+            if is_Vietnamese_words[ith]:
+                onset, medial, nucleus, coda, tone = word_component
+                vowel = compose_word(None, medial, nucleus, coda, None)
+                phoneme_script.extend([
+                    self.phoneme2idx[onset] if onset else self.blank_idx, 
+                    self.phoneme2idx[vowel] if vowel else self.blank_idx, 
+                    self.phoneme2idx[tone] if tone else self.blank_idx, 
+                    self.blank_idx])
+            else:
+                for char in word_component:
+                    onset, medial, nucleus, coda, tone = char
+                    vowel = compose_word(None, medial, nucleus, coda, None)
+                    phoneme_script.extend([
+                        self.phoneme2idx[onset] if onset else self.blank_idx, 
+                        self.phoneme2idx[vowel] if vowel else self.blank_idx, 
+                        self.phoneme2idx[tone] if tone else self.blank_idx, 
+                        self.blank_idx])
+
+        vec = torch.tensor(phoneme_script[:-1]).long()  # remove the last blank token
         return vec
 
     def decode_script(self, tensor_script: torch.Tensor):
