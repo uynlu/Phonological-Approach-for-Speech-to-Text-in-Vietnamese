@@ -161,7 +161,7 @@ class PhonemeVocabv2:
             "uyp", "uyt", "uyu",
             
             "uach", "uai", "uan", "uang", "uanh", "uao", "uat", "uau", "uay",
-            "uăc", "uăm", "uăn", "uăng", "uăp", "uăt", "uâc", "uât",
+            "uăc", "uăm", "uăn", "uăng", "uăp", "uăt", "uâc", "uât", "uoang",
             "ue", "uen", "ueo", "uet", "uên", "uêt", "uêu",
             
             # ư
@@ -174,8 +174,8 @@ class PhonemeVocabv2:
             "y", "yêm", "yên", 
             "yêng", "yêt", "yêu"
         ]
-        codas = ['ng', 'nh', 'ch', 'u', 'n', 'o', 'p', 'c', 'k', 'm', 'y', 'i', 't']
-        tones = ['<huyền>', '<sắc>', '<ngã>', '<hỏi>', '<nặng>']
+        codas = ["ng", "nh", "ch", "u", "n", "o", "p", "c", "k", "m", "y", "i", "t"]
+        tones = ["<huyền>", "<sắc>", "<ngã>", "<hỏi>", "<nặng>"]
         phonemes = onsets + rhymes + codas + tones
         self.phoneme2idx = {
             phoneme: idx for idx, phoneme in enumerate(phonemes, start=4)
@@ -201,6 +201,7 @@ class PhonemeVocabv2:
         phoneme_script = []
         for ith in range(len(words)):
             word_component = word_components[ith]
+            print(word_component)
             if is_Vietnamese_words[ith]:
                 onset, medial, nucleus, coda, tone = word_component
                 vowel = compose_word(None, medial, nucleus, coda, None)

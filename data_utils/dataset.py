@@ -1,5 +1,5 @@
 from torch.utils.data import Dataset
-from utils.speech.speech import CustomSpeech
+from data_utils.speech import CustomSpeech
 from data_utils.text import CustomText
 
 

@@ -3,29 +3,29 @@ import re
 
 def get_tone(word: str):
     tone_map = {
-        '\u0300': '<huyền>',
-        '\u0301': '<sắc>',
-        '\u0303': '<ngã>',
-        '\u0309': '<hỏi>',
-        '\u0323': '<nặng>',
+        "\u0300": "<huyền>",
+        "\u0301": "<sắc>",
+        "\u0303": "<ngã>",
+        "\u0309": "<hỏi>",
+        "\u0323": "<nặng>",
     }
-    decomposed_word = unicodedata.normalize('NFD', word)
+    decomposed_word = unicodedata.normalize("NFD", word)
     tone = None
-    remaining_word = ''
+    remaining_word = ""
     for char in decomposed_word:
         if char in tone_map:
             tone = tone_map[char]
         else:
             remaining_word += char
-    remaining_word = unicodedata.normalize('NFC', remaining_word)
+    remaining_word = unicodedata.normalize("NFC", remaining_word)
     
     return tone, remaining_word
 
 def get_onset(word: str) -> tuple[str, str]:
-    onsets = ['ngh', 'tr', 'th', 'ph', 'nh', 'ng', 'kh', 
-              'gi', 'gh', 'ch', 'q', 'đ', 'x', 'v', 't', 
-              's', 'r', 'n', 'm', 'l', 'k', 'h', 'g', 'd', 
-              'c', 'b']
+    onsets = ["ngh", "tr", "th", "ph", "nh", "ng", "kh", 
+              "gi", "gh", "ch", "q", "đ", "x", "v", "t", 
+              "s", "r", "n", "m", "l", "k", "h", "g", "d", 
+              "c", "b"]
     
     # get the onset
     for onset in onsets:
@@ -54,7 +54,7 @@ def get_medial(word: str) -> tuple[str, str]:
     if word.startswith("ua") or word.startswith("uô"):
         return None, word
     
-    nucleuses = ['ê', 'y', 'ơ', 'a', 'â', 'ya']
+    nucleuses = ["ê", "y", "ơ", "a", "â", "ya"]
     for nucleus in nucleuses:
         component = U_MEDIAL + nucleus
         if word.startswith(component):
@@ -64,9 +64,9 @@ def get_medial(word: str) -> tuple[str, str]:
     return None, word
 
 def get_nucleus(word: str) -> tuple[str, str]:
-    nucleuses = ['oo', 'ươ', 'ưa', 'uô', 'ua', 'iê', 'yê', 
-                 'ia', 'ya', 'e', 'ê', 'u', 'ư', 'ô', 'i', 
-                 'y', 'o', 'ơ', 'â', 'a', 'o', 'ă']
+    nucleuses = ["oo", "ươ", "ưa", "uô", "ua", "iê", "yê", 
+                 "ia", "ya", "e", "ê", "u", "ư", "ô", "i", 
+                 "y", "o", "ơ", "â", "a", "o", "ă"]
     
     for nucleus in nucleuses:
         if word.startswith(nucleus):
@@ -76,7 +76,7 @@ def get_nucleus(word: str) -> tuple[str, str]:
     return None, word
     
 def get_coda(word: str) -> str:
-    codas = ['ng', 'nh', 'ch', 'u', 'n', 'o', 'p', 'c', 'k', 'm', 'y', 'i', 't']
+    codas = ["ng", "nh", "ch", "u", "n", "o", "p", "c", "k", "m", "y", "i", "t"]
     
     if word in codas:
         return word
@@ -112,9 +112,9 @@ def is_Vietnamese(word: str) -> tuple[bool, tuple]:
         word = special_words_to_words[word]
 
     # check the total number of nucleus in word
-    vowels = ['oo', 'ươ', 'ưa', 'uô', 'ua', 'iê', 'yê', 
-              'ia', 'ya', 'e', 'ê', 'u', 'ư', 'ô', 'i', 
-              'y', 'o', 'ơ', 'â', 'a', 'o', 'ă']
+    vowels = ["oo", "ươ", "ưa", "uô", "ua", "iê", "yê", 
+              "ia", "ya", "e", "ê", "u", "ư", "ô", "i", 
+              "y", "o", "ơ", "â", "a", "o", "ă"]
     currentCharacterIsVowels = False
     previousCharacterIsVowels = word[0] in vowels
     foundVowels = 0
@@ -174,7 +174,7 @@ def is_Vietnamese(word: str) -> tuple[bool, tuple]:
     if medial == "o" and nucleus not in ["a", "ă", "e"]:
         return False, None
     
-    if medial == "u" and nucleus not in ['yê', 'ya', 'e', 'ê', 'y', 'ơ', "ô", 'a', 'â', 'ă']:
+    if medial == "u" and nucleus not in ["yê", "ya", "e", "ê", "y", "ơ", "ô", "a", "â", "ă", "i"]:  # i => quí
         return False, None
     
     if nucleus == "oo" and coda not in ["ng", "c"]:
@@ -259,11 +259,11 @@ def decompose_non_vietnamese_word(word: str):
     
 def compose_word(onset: str, medial: str, nucleus: str, coda: str, tone: str) -> str:
     tone_map = {
-            '<huyền>': '\u0300',
-            '<sắc>': '\u0301',
-            '<ngã>': '\u0303',
-            '<hỏi>': '\u0309',
-            '<nặng>': '\u0323'
+            "<huyền>": "\u0300",
+            "<sắc>": "\u0301",
+            "<ngã>": "\u0303",
+            "<hỏi>": "\u0309",
+            "<nặng>": "\u0323"
         }
     if tone is not None:
         tone = tone_map[tone]

@@ -52,7 +52,7 @@ class CustomText(Dataset):
     
     def cut_down_if_necessary(self, script):
         if len(script) > self.max_len - 2:
-            script = script[:self.max_len]
+            script = script[:self.max_len - 2]
         return script
     
     def add_token(self, script):
