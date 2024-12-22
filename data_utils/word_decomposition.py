@@ -76,7 +76,7 @@ def get_nucleus(word: str) -> tuple[str, str]:
     return None, word
     
 def get_coda(word: str) -> str:
-    codas = ['ng', 'nh', 'ch', 'u', 'n', 'o', 'p', 'c', 'k', 'm', 'y', 'i', 't']
+    codas = ['ng', 'nh', 'ch', 'u', 'n', 'o', 'p', 'c', 'm', 'y', 'i', 't']
     
     if word in codas:
         return word
