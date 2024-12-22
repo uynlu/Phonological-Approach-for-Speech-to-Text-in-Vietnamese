@@ -4,7 +4,8 @@ from pydub import AudioSegment
 
 def convert_mp3_to_wav(dataset_directory):
     origin_directory = os.path.join(dataset_directory, "voices")
-    converted_directory = os.path.join(dataset_directory, "converted voices")
+    converted_directory = os.path.join(dataset_directory, "wav-voices")
+    
     if not os.path.exists(converted_directory):
         os.makedirs(converted_directory)
         for file in os.listdir(origin_directory):

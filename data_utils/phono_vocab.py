@@ -3,6 +3,9 @@ import torch
 from data_utils.word_decomposition import is_Vietnamese, decompose_non_vietnamese_word, compose_word
 
 class PhonoVocabv1:
+    '''
+        Turn words into the vectors of phonemes
+    '''
     def __init__(self):
 
         self.pad_idx = 0
@@ -27,7 +30,11 @@ class PhonoVocabv1:
         }
         self.idx2medial = {idx: medial for medial, idx in self.medial2idx.items()}
 
-        nucleuses = ['ê', 'y', 'ơ', 'a', 'â', 'ya']
+        nucleuses = [
+            'oo', 'ươ', 'ưa', 'uô', 'ua', 'iê', 'yê', 
+            'ia', 'ya', 'e', 'ê', 'u', 'ư', 'ô', 'i', 
+            'y', 'o', 'ơ', 'â', 'a', 'o', 'ă'
+        ]
         self.nucleus2idx = {
             nucleus: idx for idx, nucleus in enumerate(nucleuses, start=4)
         }
@@ -116,9 +123,11 @@ class PhonoVocabv1:
         
         return " ".join(script)
 
-
 class PhonoVocabv2:
     def __init__(self):
+        '''
+            Turn words into continuous senquences of phoneme
+        '''
 
         self.pad_idx = 0
         self.bos_idx = 1
@@ -214,8 +223,7 @@ class PhonoVocabv2:
             phoneme_script.extend([
                 self.onset2idx[onset] if onset else self.blank_idx, 
                 self.phoneme2idx[vowel] if vowel else self.blank_idx, 
-                self.phoneme2idx[tone] if tone else self.blank_idx, 
-                self.blank_idx])
+                self.phoneme2idx[tone] if tone else self.blank_idx])
         
         vec = torch.tensor(phoneme_script[-1]).long() # remove the last blank token
 

@@ -27,7 +27,11 @@ class PhonemeVocabv1:
         }
         self.idx2medial = {idx: medial for medial, idx in self.medial2idx.items()}
 
-        nucleuses = ['ê', 'y', 'ơ', 'a', 'â', 'ya']
+        nucleuses = [
+            'oo', 'ươ', 'ưa', 'uô', 'ua', 'iê', 'yê', 
+            'ia', 'ya', 'e', 'ê', 'u', 'ư', 'ô', 'i', 
+            'y', 'o', 'ơ', 'â', 'a', 'o', 'ă'
+        ]
         self.nucleus2idx = {
             nucleus: idx for idx, nucleus in enumerate(nucleuses, start=4)
         }
@@ -102,6 +106,10 @@ class PhonemeVocabv1:
         script = ' '.join([k for k, _ in itertools.groupby(script)])
 
 class PhonemeVocabv2:
+    '''
+        Turn words into continuous senquences of phoneme
+    '''
+    
     def __init__(self):
         self.pad_idx = 0
         self.bos_idx = 1
