@@ -7,6 +7,7 @@ from typing import Union
 
 from data_utils.phoneme_vocab import PhonemeVocabv1, PhonemeVocabv2
 from data_utils.phono_vocab import PhonoVocabv1, PhonoVocabv2
+from data_utils.utils import normalize_script
 
 def collate_fn(items: list[dict]) -> torch.Tensor:
     ids = [item["id"] for item in items]
@@ -35,7 +36,7 @@ def collate_fn(items: list[dict]) -> torch.Tensor:
         "labels": torch.tensor(labels)
     }
 
-class CommonVoiceDataset(Dataset):
+class PhonemeCommonVoiceDataset(Dataset):
     def __init__(self, 
                  json_path: str, 
                  voice_path: str, 
@@ -58,17 +59,22 @@ class CommonVoiceDataset(Dataset):
         item = self._data[key]
 
         script = item["script"]
-        print(script)
-        raise
-        script_ids = self.vocab.encode_script(script)
+        script = script.lower()
+        script = normalize_script(script)
+        script_ids, word_indices = self.vocab.encode_script(script)
 
         audio_file = item["voice"]
+        audio_file = audio_file.replace("mp3", "wav")
         voice, old_sampling_rate = torchaudio.load(os.path.join(self.voice_path, audio_file))
         voice = torchaudio.functional.resample(voice, orig_freq=old_sampling_rate, new_freq=self.sampling_rate)
+
+        if not script == self.vocab.decode_script(script_ids, word_indices):
+            print(script, "-", self.vocab.decode_script(script_ids, word_indices), "-", word_indices)
 
         return {
             "id": key,
             "voice": voice,
             "script": script,
-            "labels": script_ids
+            "labels": script_ids,
+            "word_indices": word_indices
         }

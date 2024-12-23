@@ -1,6 +1,24 @@
 import unicodedata
 import re
 
+def normalize_script(script: str) -> str:
+    script = script.replace("0", " không ")
+    script = script.replace("1", " một ")
+    script = script.replace("2", " hai ")
+    script = script.replace("3", " ba ")
+    script = script.replace("4", " bốn ")
+    script = script.replace("5", " năm ")
+    script = script.replace("6", " sáu ")
+    script = script.replace("7", " bảy ")
+    script = script.replace("8", " tám ")
+    script = script.replace("9", " chín ")
+
+    script = re.sub(r"[,\.!?@\'\"-_+=#$%^&*()~\\{}\[\];:<>/|]", " ", script)
+    
+    script = " ".join(script.split())
+
+    return script
+
 def get_tone(word: str):
     tone_map = {
         "\u0300": "<huyền>",
@@ -235,16 +253,20 @@ def is_Vietnamese(word: str) -> tuple[bool, tuple]:
     return True, (onset, medial, nucleus, coda, tone)
 
 def decompose_non_vietnamese_word(word: str):
-    vowels = ["a", "e", "i", "o", "u"]
+    vowels = ["a", "ă", "â",
+              "e", "ê" "i", 
+              "o", "ô", "ơ",
+              "u", "ư"]
     chars = []
     for char in word:
+        tone, char = get_tone(char)
         if char in vowels:
             chars.append([
                 None,
                 None,
                 char,
                 None,
-                None
+                tone
             ])
         else:
             chars.append([
@@ -252,7 +274,7 @@ def decompose_non_vietnamese_word(word: str):
                 None,
                 None,
                 None,
-                None
+                tone
             ])
 
     return chars
@@ -273,10 +295,14 @@ def compose_word(onset: str, medial: str, nucleus: str, coda: str, tone: str) ->
         if onset != "q" and medial is not None and nucleus is not None and coda is None and nucleus != "ơ":
             medial += tone
         else:
-            if coda is None:
-                nucleus = nucleus[0] + tone + nucleus[1:]
-            else:
-                nucleus = nucleus + tone
+            try:
+                if coda is None:
+                    nucleus = nucleus[0] + tone + nucleus[1:]
+                else:
+                    nucleus = nucleus + tone
+            except:
+                print(onset, medial, nucleus, coda, tone)
+                raise
 
     word = ""
     if onset:
@@ -290,5 +316,7 @@ def compose_word(onset: str, medial: str, nucleus: str, coda: str, tone: str) ->
 
     if "gii" in word:
         word = re.sub("gii", "gi", word)
+
+    word = unicodedata.normalize("NFC", word)
 
     return word

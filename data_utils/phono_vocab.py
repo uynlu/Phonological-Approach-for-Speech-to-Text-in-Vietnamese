@@ -1,6 +1,6 @@
 import torch
 
-from data_utils.word_decomposition import is_Vietnamese, decompose_non_vietnamese_word, compose_word
+from data_utils.utils import is_Vietnamese, decompose_non_vietnamese_word, compose_word
 
 class PhonoVocabv1:
     '''
