@@ -69,7 +69,7 @@ def get_medial(word: str) -> tuple[str, str]:
             word = word.removeprefix("o")
             return O_MEDIAL, word
         
-    if word.startswith("ua") or word.startswith("uô"):
+    if (word.startswith("ua") and word != "ua") or word.startswith("uô"):
         return None, word
     
     nucleuses = ["ê", "y", "ơ", "a", "â", "ya"]
@@ -295,14 +295,10 @@ def compose_word(onset: str, medial: str, nucleus: str, coda: str, tone: str) ->
         if onset != "q" and medial is not None and nucleus is not None and coda is None and nucleus != "ơ":
             medial += tone
         else:
-            try:
-                if coda is None:
-                    nucleus = nucleus[0] + tone + nucleus[1:]
-                else:
-                    nucleus = nucleus + tone
-            except:
-                print(onset, medial, nucleus, coda, tone)
-                raise
+            if coda is None:
+                nucleus = nucleus[0] + tone + nucleus[1:]
+            else:
+                nucleus = nucleus + tone
 
     word = ""
     if onset:

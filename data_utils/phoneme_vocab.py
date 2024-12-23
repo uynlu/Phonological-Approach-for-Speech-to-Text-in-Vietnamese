@@ -1,9 +1,6 @@
 import torch
-import itertools
-import re
-import string
 
-from data_utils.utils import is_Vietnamese, decompose_non_vietnamese_word, compose_word
+from data_utils.utils import is_Vietnamese, decompose_non_vietnamese_word, compose_word, split_phoneme
 
 class PhonemeVocabv1:
     def __init__(self):
@@ -47,7 +44,7 @@ class PhonemeVocabv1:
         words = script.split()
         word_components = []
         word_indices = [] # mark the token belonging to a word
-        word_index = 0
+        word_index = 1
         for word in words:
             is_Vietnamese_word, components = is_Vietnamese(word)
             if is_Vietnamese_word:
@@ -77,7 +74,7 @@ class PhonemeVocabv1:
         eos_token = [self.eos_idx, self.blank_idx, self.blank_idx, self.blank_idx, self.blank_idx, self.blank_idx]
         phoneme_script = bos_token + phoneme_script + eos_token
         # index for bos token and eos token
-        word_indices = [-1] + word_indices + [len(word_indices)]
+        word_indices = [0] + word_indices + [len(word_indices)+1]
         
         vec = torch.tensor(phoneme_script).long()
         word_indices = torch.tensor(word_indices).long()
@@ -213,50 +210,84 @@ class PhonemeVocabv2:
         self.special_ids = [self.pad_idx, self.bos_idx, self.eos_idx, self.blank_idx]
 
     def encode_script(self, script: str):
-        script = script.lower()
-        pattern = f"[{re.escape(string.punctuation)}]"
-        script = re.sub(pattern, "", script) 
         words = script.split()
         word_components = []
-        is_Vietnamese_words = []
-
+        word_indices = [] # mark the token belonging to a word
+        word_index = 1
         for word in words:
             is_Vietnamese_word, components = is_Vietnamese(word)
-            is_Vietnamese_words.append(is_Vietnamese_word)
             if is_Vietnamese_word:
                 word_components.append(components)
+                word_indices.append(word_index)
             else:
-                word_components.append(decompose_non_vietnamese_word(word))
+                characters = decompose_non_vietnamese_word(word)
+                word_components.extend(characters)
+                word_indices.extend([word_index]*len(characters))
+
+            word_index += 1
 
         phoneme_script = []
         for ith in range(len(words)):
             word_component = word_components[ith]
-            if is_Vietnamese_words[ith]:
-                onset, medial, nucleus, coda, tone = word_component
-                vowel = compose_word(None, medial, nucleus, coda, None)
-                phoneme_script.extend([
-                    self.phoneme2idx[onset] if onset else self.blank_idx, 
-                    self.phoneme2idx[vowel] if vowel else self.blank_idx, 
-                    self.phoneme2idx[tone] if tone else self.blank_idx, 
-                    self.blank_idx])
-            else:
-                for char in word_component:
-                    onset, medial, nucleus, coda, tone = char
-                    vowel = compose_word(None, medial, nucleus, coda, None)
-                    phoneme_script.extend([
-                        self.phoneme2idx[onset] if onset else self.blank_idx, 
-                        self.phoneme2idx[vowel] if vowel else self.blank_idx, 
-                        self.phoneme2idx[tone] if tone else self.blank_idx, 
-                        self.blank_idx])
+            onset, medial, nucleus, coda, tone = word_component
+            rhyme = compose_word(None, medial, nucleus, coda, None)
+            phoneme_script.extend([
+                self.phoneme2idx[onset] if onset else self.blank_idx, 
+                self.phoneme2idx[rhyme] if rhyme else self.blank_idx, 
+                self.phoneme2idx[tone] if tone else self.blank_idx, 
+                self.blank_idx])
 
-        vec = torch.tensor(phoneme_script[:-1]).long() # remove the last blank token
-        return vec
+        phoneme_script = phoneme_script[:-1] # skip the last blank token
+        bos_token = [self.bos_idx, self.blank_idx, self.blank_idx, self.blank_idx]
+        eos_token = [self.eos_idx, self.blank_idx, self.blank_idx, self.blank_idx]
+        phoneme_script = bos_token + phoneme_script + eos_token
+        # index for bos token and eos token
+        word_indices = [0] + word_indices + [len(word_indices)+1]
+        
+        vec = torch.tensor(phoneme_script).long()
+        word_indices = torch.tensor(word_indices).long()
 
-    def decode_script(self, tensor_script: torch.Tensor):
+        return vec, word_indices
+
+    def decode_script(self, tensor_script: torch.Tensor, word_indices: torch.Tensor):
         '''
             tensorscript: (1, seq_len)
         '''
         # remove duplicated token
-        tensor_script = tensor_script.squeeze(0).long().tolist()
-        script = [self.idx2phoneme[idx] for idx in tensor_script]
-        script = ' '.join([k for k, _ in itertools.groupby(script)])
+        ids = tensor_script.long().tolist()
+        script = []
+        word = []
+        ith = 0
+        while ith < len(ids):
+            idx = ids[ith]
+            if idx not in self.special_ids:
+                word.append(self.idx2phoneme[idx])
+            else:
+                word.append(None)
+            if len(word) == 3:
+                onset, rhyme, tone = word
+                if rhyme:
+                    _, medial, nucleus, coda = split_phoneme(rhyme)
+                    word = compose_word(onset, medial, nucleus, coda, tone)
+                else:
+                    word = compose_word(onset, None, None, None, None)
+                script.append(word)
+                word = []
+                ith += 1 # skip the blank token
+            ith += 1
+
+        refined_script = [] # script that is preprocessed for non Vietnamese words
+        prev_id = [word_indices[0]]
+        word = [script[0]]
+        for ith, current_id in enumerate(word_indices[1:], start=1):
+            current_token = script[ith]
+            if current_id == prev_id:
+                word.append(current_token)
+            else:
+                refined_script.append("".join(word))
+                prev_id = current_id
+                word = [current_token]
+
+        refined_script = ' '.join(refined_script[1:]) # skip the bos token
+
+        return refined_script

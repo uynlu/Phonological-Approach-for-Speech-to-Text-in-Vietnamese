@@ -68,9 +68,6 @@ class PhonemeCommonVoiceDataset(Dataset):
         voice, old_sampling_rate = torchaudio.load(os.path.join(self.voice_path, audio_file))
         voice = torchaudio.functional.resample(voice, orig_freq=old_sampling_rate, new_freq=self.sampling_rate)
 
-        if not script == self.vocab.decode_script(script_ids, word_indices):
-            print(script, "-", self.vocab.decode_script(script_ids, word_indices), "-", word_indices)
-
         return {
             "id": key,
             "voice": voice,
