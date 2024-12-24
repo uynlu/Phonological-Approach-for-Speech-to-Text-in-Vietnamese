@@ -162,7 +162,10 @@ class InstanceList(OrderedDict):
                 padded_values.append(value.unsqueeze(0))
                 continue
 
-            padding_tensor = torch.zeros((additional_len, )).fill_(padding_value)
+            if value.dim() == 2:
+                padding_tensor = torch.zeros((additional_len, value.shape[-1])).fill_(padding_value)
+            else:
+                padding_tensor = torch.zeros((additional_len, )).fill_(padding_value)
             value = torch.cat([value, padding_tensor], dim=0)
 
             padded_values.append(value.unsqueeze(0))

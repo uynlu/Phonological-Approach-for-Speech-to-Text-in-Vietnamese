@@ -50,6 +50,7 @@ class ConFormer(nn.Module):
         self.loss_fn = nn.CTCLoss(blank=self.pad_idx, zero_infinity=True)
 
     def forward(self, voice_tensor: torch.Tensor, labels: torch.Tensor) -> tuple[torch.Tensor, torch.Tensor]:
+        voice_tensor = voice_tensor.transpose(-1, -2)
         logits = self.forward_step(voice_tensor)
 
         input_lengths = logits.shape[:-1]

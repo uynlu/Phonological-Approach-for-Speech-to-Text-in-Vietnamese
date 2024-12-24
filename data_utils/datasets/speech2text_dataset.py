@@ -7,6 +7,7 @@ from builders.dataset_builder import META_DATASET
 from data_utils.vocabs.character_vocab import CharacterVocab
 from data_utils.utils import normalize_script
 from utils.instance import Instance
+from data_utils.utils import MelSpectrogram
 
 @META_DATASET.register()
 class CharacterDataset(Dataset):
@@ -14,8 +15,8 @@ class CharacterDataset(Dataset):
         super().__init__()
 
         self.voice_path = config.voice_path
-        self.sampling_rate = config.sampling_rate
         self.vocab = vocab
+        self.transformer = MelSpectrogram(config.transformer)
 
         self._data: dict = json.load(open(config.json_path))
         self._keys = list(self._data.keys())
@@ -34,8 +35,9 @@ class CharacterDataset(Dataset):
 
         audio_file = item["voice"]
         audio_file = audio_file.replace("mp3", "wav")
-        voice, old_sampling_rate = torchaudio.load(os.path.join(self.voice_path, audio_file))
-        voice = torchaudio.functional.resample(voice, orig_freq=old_sampling_rate, new_freq=self.sampling_rate).squeeze(0)
+        voice, _ = torchaudio.load(os.path.join(self.voice_path, audio_file))
+        voice = self.transformer.transform(voice)
+        voice = voice.squeeze(0).transpose(-1, -2)
 
         return Instance(
             id = key,
@@ -57,8 +59,9 @@ class PhonemeDataset(CharacterDataset):
 
         audio_file = item["voice"]
         audio_file = audio_file.replace("mp3", "wav")
-        voice, old_sampling_rate = torchaudio.load(os.path.join(self.voice_path, audio_file))
-        voice = torchaudio.functional.resample(voice, orig_freq=old_sampling_rate, new_freq=self.sampling_rate)
+        voice, _ = torchaudio.load(os.path.join(self.voice_path, audio_file))
+        voice = self.transformer.transform(voice)
+        voice = voice.squeeze(0).transpose(-1, -2)
 
         return Instance(
             id = key,

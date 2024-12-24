@@ -4,17 +4,32 @@ dataset:
     train: 
       json_path: data_sets/common-voice/train.json
       voice_path: data_sets/common-voice/wav-voices
-      sampling_rate: 16000
+      transformer:
+        sampling_rate: 16000
+        n_mels: 80
+        win_length: null
+        hop_length: 160
+        n_ffts: 400
       type: CharacterDataset
     dev:
       json_path: data_sets/common-voice/dev.json
       voice_path: data_sets/common-voice/wav-voices
-      sampling_rate: 16000
+      transformer:
+        sampling_rate: 16000
+        n_mels: 80
+        win_length: null
+        hop_length: 160
+        n_ffts: 400
       type: CharacterDataset
     test:
       json_path: data_sets/common-voice/test.json
       voice_path: data_sets/common-voice/wav-voices
-      sampling_rate: 16000
+      transformer:
+        sampling_rate: 16000
+        n_mels: 80
+        win_length: null
+        hop_length: 160
+        n_ffts: 400
       type: CharacterDataset
     batch_size: 16
     workers: 0
