@@ -1,0 +1,49 @@
+executor: CharacterBasedExecutor
+
+dataset:
+    train: 
+      json_path: data_sets/common-voice/train.json
+      voice_path: data_sets/common-voice/wav-voices
+      sampling_rate: 16000
+      type: CharacterDataset
+    dev:
+      json_path: data_sets/common-voice/dev.json
+      voice_path: data_sets/common-voice/wav-voices
+      sampling_rate: 16000
+      type: CharacterDataset
+    test:
+      json_path: data_sets/common-voice/test.json
+      voice_path: data_sets/common-voice/wav-voices
+      sampling_rate: 16000
+      type: CharacterDataset
+    batch_size: 16
+    workers: 0
+
+vocab:
+  type: CharacterVocab
+
+training:
+  checkpoint_path: saved_models
+  learning_rate: 0.01
+  warmup: 10000
+  score: wer
+  patience: 5
+
+model:
+  name: ConFormer_character_CTC
+  architecture: ConFormer
+  device: cuda
+  d_model: 144
+  encoder:
+    d_input: 80
+    d_model: 144
+    num_layers: 16
+    conv_kernel_size: 31
+    ffwd_residual_factor: 0.5
+    ffwd_expansion_factor: 4
+    num_heads: 4
+    dropout: 0.1
+  decoder:
+    d_model: 144
+    num_layers: 3
+

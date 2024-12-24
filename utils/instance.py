@@ -29,7 +29,7 @@ class Instance(OrderedDict):
         return list(self.keys())
 
 class InstanceList(OrderedDict):
-    def __init__(self, instance_list: List["Instance"] = []):
+    def __init__(self, instance_list: List["Instance"] = [], pad_value: int = 0):
         super().__init__(self)
 
         if len(instance_list) == 0:
@@ -42,10 +42,10 @@ class InstanceList(OrderedDict):
             v0 = values[0]
             if isinstance(v0, np.ndarray):
                 values = [torch.tensor(value) for value in values]
-                values = self.pad_values(values)
+                values = self.pad_values(values, pad_value)
                 values = torch.cat(values, dim=0)
             if isinstance(v0, torch.Tensor):
-                values = self.pad_values(values)
+                values = self.pad_values(values, pad_value)
                 values = torch.cat(values, dim=0)
             elif hasattr(type(v0), "cat"):
                 values = type(v0).cat(values)
@@ -162,7 +162,7 @@ class InstanceList(OrderedDict):
                 padded_values.append(value.unsqueeze(0))
                 continue
 
-            padding_tensor = torch.zeros((additional_len, value.shape[-1])).fill_(padding_value)
+            padding_tensor = torch.zeros((additional_len, )).fill_(padding_value)
             value = torch.cat([value, padding_tensor], dim=0)
 
             padded_values.append(value.unsqueeze(0))

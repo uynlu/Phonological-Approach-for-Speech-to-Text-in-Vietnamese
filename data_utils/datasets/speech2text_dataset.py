@@ -10,18 +10,14 @@ from utils.instance import Instance
 
 @META_DATASET.register()
 class CharacterDataset(Dataset):
-    def __init__(self, 
-                 json_path: str, 
-                 voice_path: str, 
-                 sampling_rate: int,
-                 vocab: CharacterVocab):
+    def __init__(self, config, vocab: CharacterVocab):
         super().__init__()
 
-        self.voice_path = voice_path
-        self.sampling_rate = sampling_rate
+        self.voice_path = config.voice_path
+        self.sampling_rate = config.sampling_rate
         self.vocab = vocab
 
-        self._data: dict = json.load(open(json_path))
+        self._data: dict = json.load(open(config.json_path))
         self._keys = list(self._data.keys())
 
     def __len__(self) -> int:
@@ -39,7 +35,7 @@ class CharacterDataset(Dataset):
         audio_file = item["voice"]
         audio_file = audio_file.replace("mp3", "wav")
         voice, old_sampling_rate = torchaudio.load(os.path.join(self.voice_path, audio_file))
-        voice = torchaudio.functional.resample(voice, orig_freq=old_sampling_rate, new_freq=self.sampling_rate)
+        voice = torchaudio.functional.resample(voice, orig_freq=old_sampling_rate, new_freq=self.sampling_rate).squeeze(0)
 
         return Instance(
             id = key,

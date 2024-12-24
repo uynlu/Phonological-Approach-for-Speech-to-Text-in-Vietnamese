@@ -5,7 +5,7 @@ from data_utils.utils import is_Vietnamese, decompose_non_vietnamese_word, compo
 
 @META_VOCAB.register()
 class PhonemeVocabv1:
-    def __init__(self):
+    def __init__(self, config):
         self.pad_token = "<pad>"
         self.bos_token = "<bos>"
         self.eos_token = "<eos>"
@@ -39,7 +39,7 @@ class PhonemeVocabv1:
         self.special_ids = [self.pad_idx, self.bos_idx, self.eos_idx, self.blank_idx]
     
     @property
-    def total_phoneme(self) -> int:
+    def size(self) -> int:
         return len(self.phoneme2idx)
 
     def encode_script(self, script: str):
@@ -128,7 +128,7 @@ class PhonemeVocabv2:
         Turn words into continuous senquences of phoneme
     '''
     
-    def __init__(self):
+    def __init__(self, config):
         self.pad_token = "<pad>"
         self.bos_token = "<bos>"
         self.eos_token = "<eos>"

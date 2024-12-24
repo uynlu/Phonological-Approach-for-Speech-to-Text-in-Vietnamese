@@ -4,7 +4,7 @@ from builders.vocab_builder import META_VOCAB
 
 @META_VOCAB.register()
 class CharacterVocab:
-    def __init__(self):
+    def __init__(self, config):
         self.pad_token = "<pad>"
         self.bos_token = "<bos>"
         self.eos_token = "<eos>"

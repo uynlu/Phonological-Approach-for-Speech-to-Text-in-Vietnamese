@@ -292,9 +292,7 @@ class ConformerEncoder(nn.Module):
       mask (Tensor): (batch_size, time, time) Optional mask to zero out attention score at certain indices
     
     Outputs:
-      Tensor (batch_size, time, d_model): Output tensor from the conformer encoder
-
-  
+      Tensor (batch_size, time, d_model): Output tensor from the conformer encoder  
   '''
   def __init__(
           self,

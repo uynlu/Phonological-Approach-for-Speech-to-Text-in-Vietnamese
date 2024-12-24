@@ -25,6 +25,7 @@ class ConFormer(nn.Module):
         super().__init__()
 
         self.pad_idx = vocab.pad_idx
+        self.d_model = config.d_model
         
         encoder_config = config.encoder
         self.encoder = ConformerEncoder(
@@ -33,8 +34,8 @@ class ConFormer(nn.Module):
                num_layers=encoder_config.num_layers,
                conv_kernel_size=encoder_config.conv_kernel_size,
                feed_forward_residual_factor=encoder_config.ffwd_residual_factor,
-               feed_forward_expansion_factor=encoder_config.ffwd_expansion_faxtor,
-               num_heads=encoder_config.num_heas,
+               feed_forward_expansion_factor=encoder_config.ffwd_expansion_factor,
+               num_heads=encoder_config.num_heads,
                dropout=encoder_config.dropout
 		)
 
@@ -42,16 +43,17 @@ class ConFormer(nn.Module):
         self.decoder = LSTMDecoder(
             d_encoder=decoder_config.d_model,
             d_decoder=decoder_config.d_model,
-            num_classes=decoder_config.num_layers,
-            num_layers=vocab.size
+            num_classes=vocab.size,
+            num_layers=decoder_config.num_layers
         )
 
-        self.loss_fn = nn.CTCLoss(blank=self.pad_idx)
+        self.loss_fn = nn.CTCLoss(blank=self.pad_idx, zero_infinity=True)
 
     def forward(self, voice_tensor: torch.Tensor, labels: torch.Tensor) -> tuple[torch.Tensor, torch.Tensor]:
         logits = self.forward_step(voice_tensor)
 
         input_lengths = logits.shape[:-1]
+        logits = logits.permute((1, 0, -1)) # (len, bs, vocab_size)
         target_lengths = (labels == self.pad_idx).sum(dim=-1)
 
         loss = self.loss_fn(logits, labels, input_lengths, target_lengths)

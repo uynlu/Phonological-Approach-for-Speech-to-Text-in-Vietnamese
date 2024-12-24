@@ -12,7 +12,7 @@ from builders.vocab_builder import build_vocab
 from builders.dataset_builder import build_dataset
 from utils.logging_utils import setup_logger
 from builders.model_builder import build_model
-from data_utils.utils import collate_fn
+from utils.instance import Instance, InstanceList
 
 logger = setup_logger()
 
@@ -26,7 +26,7 @@ class BaseExecutor:
 
         if not os.path.isfile(os.path.join(self.checkpoint_path, "vocab.bin")):
             logger.info("Creating vocab")
-            self.vocab = self.load_vocab(config.dataset.vocab)
+            self.vocab = self.load_vocab(config.vocab)
             logger.info("Saving vocab to %s" % os.path.join(self.checkpoint_path, "vocab.bin"))
             pickle.dump(self.vocab, open(os.path.join(self.checkpoint_path, "vocab.bin"), "wb"))
         else:
@@ -34,8 +34,8 @@ class BaseExecutor:
             self.vocab = pickle.load(open(os.path.join(self.checkpoint_path, "vocab.bin"), "rb"))
 
         logger.info("Loading data")
-        self.load_datasets(config.DATASET)
-        self.create_dataloaders(config)
+        self.load_datasets(config.dataset)
+        self.create_dataloaders(config.dataset)
 
         logger.info("Building model")
         self.model = build_model(config.model, self.vocab)
@@ -49,6 +49,9 @@ class BaseExecutor:
 
     def configuring_hyperparameters(self, config):
         raise NotImplementedError
+    
+    def collate_fn(self, instances: list[Instance]) -> InstanceList:
+        return InstanceList(instances, self.vocab.pad_idx)
 
     def load_vocab(self, config):
         vocab = build_vocab(config)
@@ -62,9 +65,9 @@ class BaseExecutor:
         self.device = config.model.device
 
     def load_datasets(self, config):
-        self.train_dataset = build_dataset(config.train, self.vocab, config)
-        self.dev_dataset = build_dataset(config.dev, self.vocab, config)
-        self.test_dataset = build_dataset(config.test, self.vocab, config)
+        self.train_dataset = build_dataset(config.train, self.vocab)
+        self.dev_dataset = build_dataset(config.dev, self.vocab)
+        self.test_dataset = build_dataset(config.test, self.vocab)
 
     def create_dataloaders(self, config):
         # creating iterable-dataset data loader
@@ -73,21 +76,21 @@ class BaseExecutor:
             batch_size=config.batch_size,
             shuffle=True,
             num_workers=config.workers,
-            collate_fn=collate_fn
+            collate_fn=self.collate_fn
         )
         self.dev_dataloader = DataLoader(
             dataset=self.dev_dataset,
-            batch_size=config.batch_size,
+            batch_size=1,
             shuffle=True,
             num_workers=config.workers,
-            collate_fn=collate_fn
+            collate_fn=self.collate_fn
         )
         self.test_dataloader = DataLoader(
             dataset=self.test_dataset,
-            batch_size=config.batch_size,
+            batch_size=1,
             shuffle=True,
             num_workers=config.workers,
-            collate_fn=collate_fn
+            collate_fn=self.collate_fn
         )
 
     def evaluate_metrics(self, dataloader: DataLoader):
