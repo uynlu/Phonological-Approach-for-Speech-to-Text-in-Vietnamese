@@ -98,7 +98,7 @@ class RelativeMultiHeadAttention(nn.Module):
 
     #Mask before softmax with large negative number
     if mask is not None:
-      mask = mask.unsqueeze(1)
+      mask = mask.unsqueeze(0)
       mask_value = -1e+30 if attn.dtype == torch.float32 else -1e+4
       attn.masked_fill_(mask, mask_value)
 
@@ -324,12 +324,12 @@ class ConformerEncoder(nn.Module):
             dropout=dropout,
         ) for _ in range(num_layers)])
 
-  def forward(self, x, mask=None):
+  def forward(self, x, mask):
     x = self.conv_subsample(x)
-    if mask is not None:
-      mask = mask[:, :-2:2, :-2:2] #account for subsampling
-      mask = mask[:, :-2:2, :-2:2] #account for subsampling
-      assert mask.shape[1] == x.shape[1], f'{mask.shape} {x.shape}'
+
+    mask = mask[:, :-2:2, :-2:2] # account for subsampling
+    mask = mask[:, :-2:2, :-2:2] # account for subsampling
+    assert mask.shape[1] == x.shape[1], f'{mask.shape} {x.shape}'
     
     x = self.linear_proj(x)
     x = self.dropout(x)
@@ -338,31 +338,3 @@ class ConformerEncoder(nn.Module):
       x = layer(x, mask=mask)
     
     return x
-
-
-class LSTMDecoder(nn.Module):
-  '''
-    LSTM Decoder
-
-    Parameters:
-      d_encoder (int): Output dimension of the encoder
-      d_decoder (int): Hidden dimension of the decoder
-      num_layers (int): Number of LSTM layers to use in the decoder
-      num_classes (int): Number of output classes to predict
-    
-    Inputs:
-      x (Tensor): (batch_size, time, d_encoder)
-    
-    Outputs:
-      Tensor (batch_size, time, num_classes): Class prediction logits
-  
-  '''
-  def __init__(self, d_encoder=144, d_decoder=320, num_layers=1, num_classes=29):
-    super(LSTMDecoder, self).__init__()
-    self.lstm = nn.LSTM(input_size=d_encoder, hidden_size=d_decoder, num_layers=num_layers, batch_first=True)
-    self.linear = nn.Linear(d_decoder, num_classes)
-
-  def forward(self, x):
-    x, _ = self.lstm(x)
-    logits = self.linear(x)
-    return logits

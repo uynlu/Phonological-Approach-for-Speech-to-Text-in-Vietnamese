@@ -1,7 +1,9 @@
 import torch
 
+from builders.vocab_builder import META_VOCAB
 from data_utils.utils import is_Vietnamese, decompose_non_vietnamese_word, compose_word
 
+@META_VOCAB.register()
 class PhonoVocabv1:
     '''
         Turn words into the vectors of phonemes
@@ -123,6 +125,7 @@ class PhonoVocabv1:
         
         return " ".join(script)
 
+@META_VOCAB.register()
 class PhonoVocabv2:
     def __init__(self):
         '''

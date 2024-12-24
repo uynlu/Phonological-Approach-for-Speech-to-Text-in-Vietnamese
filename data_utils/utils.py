@@ -1,3 +1,4 @@
+import torch
 import unicodedata
 import re
 
@@ -316,3 +317,30 @@ def compose_word(onset: str, medial: str, nucleus: str, coda: str, tone: str) ->
     word = unicodedata.normalize("NFC", word)
 
     return word
+
+def collate_fn(items: list[dict]) -> torch.Tensor:
+    ids = [item["id"] for item in items]
+    voices = [item["voice"] for item in items]
+    scripts = [item["script"] for item in items]
+    labels = [item["labels"] for item in items]
+
+    # adding pad value for voice
+    max_voice_len = max([voice.shape[-1] for voice in voices])
+    for ith, voice in enumerate(voices):
+        delta_len = max_voice_len - voice.shape[-1]
+        pad_tensor = torch.zeros((1, delta_len)).float()
+        voices[ith] = torch.cat([voice, pad_tensor], dim=-1)
+    
+    # adding pad value for encoded script
+    max_label_len = max([label.shape[-1] for label in labels])
+    for ith, label in enumerate(labels):
+        delta_len = max_label_len - label.shape[-1]
+        pad_tensor = torch.zeros((delta_len, )).float()
+        labels[ith] = torch.cat([label, pad_tensor], dim=-1).unsqueeze(0)
+
+    return {
+        "id": ids,
+        "voice": torch.tensor(voices),
+        "script": scripts,
+        "labels": torch.tensor(labels)
+    }
