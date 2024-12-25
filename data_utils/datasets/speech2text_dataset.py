@@ -1,3 +1,4 @@
+import torch
 from torch.utils.data import Dataset
 import torchaudio
 import json
@@ -37,11 +38,15 @@ class CharacterDataset(Dataset):
         audio_file = audio_file.replace("mp3", "wav")
         voice, _ = torchaudio.load(os.path.join(self.voice_path, audio_file))
         voice = self.transformer.transform(voice)
-        voice = voice.squeeze(0).transpose(-1, -2)
+        voice = voice.squeeze(0).transpose(0, 1)
+        input_length = voice.shape[0]
+        target_length = script_ids.shape[0]
 
         return Instance(
             id = key,
             voice = voice,
+            input_length=input_length,
+            target_length=target_length,
             script = script,
             labels = script_ids
         )

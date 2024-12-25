@@ -98,7 +98,7 @@ class RelativeMultiHeadAttention(nn.Module):
 
     #Mask before softmax with large negative number
     if mask is not None:
-      mask = mask.unsqueeze(0)
+      mask = mask.unsqueeze(1)
       mask_value = -1e+30 if attn.dtype == torch.float32 else -1e+4
       attn.masked_fill_(mask, mask_value)
 

@@ -4,20 +4,14 @@ from torch import nn
 from builders.model_builder import META_MODEL
 from .encoder import ConformerEncoder
 from .decoder import LSTMDecoder
+from utils.instance import InstanceList
 
-def generate_padding_mask(sequences: torch.Tensor, padding_value: int = 0) -> torch.Tensor:
-    '''
-        sequences: (bs, seq_len, dim)
-    '''
-    
-    if len(sequences.shape) == 2: # (bs, seq_len)
-        __seq = sequences.unsqueeze(dim=-1) # (bs, seq_len, 1)
-    else:
-        __seq = sequences
-    
-    mask = (torch.sum(__seq, dim=-1) == (padding_value * __seq.shape[-1])).to(torch.bool) # (b_s, seq_len)
-    
-    return mask # (bs, seq_len)
+def generate_padding_mask(sequences: torch.Tensor, lengths: torch.Tensor) -> torch.Tensor:
+    mask = torch.ones(sequences.shape[0], sequences.shape[1], sequences.shape[1]) # (bs, len, len)
+    for i, l in enumerate(lengths):
+        mask[i, :, :l] = 0
+
+    return mask.bool()
 
 @META_MODEL.register()
 class ConFormer(nn.Module):
@@ -26,6 +20,7 @@ class ConFormer(nn.Module):
 
         self.pad_idx = vocab.pad_idx
         self.d_model = config.d_model
+        self.device = config.device
         
         encoder_config = config.encoder
         self.encoder = ConformerEncoder(
@@ -41,7 +36,7 @@ class ConFormer(nn.Module):
 
         decoder_config = config.decoder
         self.decoder = LSTMDecoder(
-            d_encoder=decoder_config.d_model,
+            d_encoder=encoder_config.d_model,
             d_decoder=decoder_config.d_model,
             num_classes=vocab.size,
             num_layers=decoder_config.num_layers
@@ -49,27 +44,33 @@ class ConFormer(nn.Module):
 
         self.loss_fn = nn.CTCLoss(blank=self.pad_idx, zero_infinity=True)
 
-    def forward(self, voice_tensor: torch.Tensor, labels: torch.Tensor) -> tuple[torch.Tensor, torch.Tensor]:
-        voice_tensor = voice_tensor.transpose(-1, -2)
-        logits = self.forward_step(voice_tensor)
+    def forward(self, items: InstanceList) -> tuple[torch.Tensor, torch.Tensor]:
+        voice_tensor = items.voice
+        labels = items.labels
+        input_lengths = items.input_length
+        input_lengths = [((length - 1) // 2 - 1) // 2 for length in input_lengths] # account for subsampling of time dimension
+        target_lengths = items.target_length
 
-        input_lengths = logits.shape[:-1]
+        logits = self.forward_step(voice_tensor, input_lengths)
         logits = logits.permute((1, 0, -1)) # (len, bs, vocab_size)
-        target_lengths = (labels == self.pad_idx).sum(dim=-1)
 
         loss = self.loss_fn(logits, labels, input_lengths, target_lengths)
 
         return logits, loss
     
-    def forward_step(self, voice_tensor: torch.Tensor) -> torch.Tensor:
-        mask = generate_padding_mask(voice_tensor, padding_value=self.pad_idx)
+    def forward_step(self, voice_tensor: torch.Tensor, lengths: torch.Tensor) -> torch.Tensor:
+        mask = generate_padding_mask(voice_tensor, lengths).to(self.device)
         features = self.encoder(voice_tensor, mask)
         logits = self.decoder(features)
 
         return logits
     
-    def generate(self, voice_tensor: torch.Tensor):
-        logits = self.forward_step(voice_tensor)
+    def generate(self, items: InstanceList):
+        voice_tensor = items.voice
+        input_lengths = items.input_length
+        input_lengths = [((length - 1) // 2 - 1) // 2 for length in input_lengths] # account for subsampling of time dimension
+
+        logits = self.forward_step(voice_tensor, input_lengths)
         predicted_ids = logits.argmax(dim=-1)
 
         return predicted_ids

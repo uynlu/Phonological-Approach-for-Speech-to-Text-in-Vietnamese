@@ -5,6 +5,6 @@ def compute_metrics(references: list[str], hypothesis: list[str]) -> dict:
     wer_score = wer(references, hypothesis)
 
     return {
-        "CER": cer_score,
-        "WER": wer_score
+        "CER": cer_score*100,
+        "WER": wer_score*100
     }

@@ -7,12 +7,16 @@ import os
 import numpy as np
 import pickle
 import random
+import os
+from shutil import copyfile
+import json
 
 from builders.vocab_builder import build_vocab
 from builders.dataset_builder import build_dataset
 from utils.logging_utils import setup_logger
 from builders.model_builder import build_model
 from utils.instance import Instance, InstanceList
+import evaluations
 
 logger = setup_logger()
 
@@ -141,7 +145,83 @@ class BaseExecutor:
         torch.save(dict_for_saving, os.path.join(self.checkpoint_path, "last_model.pth"))
 
     def start(self):
-        raise NotImplementedError
+        if os.path.isfile(os.path.join(self.checkpoint_path, "last_model.pth")):
+            checkpoint = self.load_checkpoint(os.path.join(self.checkpoint_path, "last_model.pth"))
+            best_val_score = checkpoint["best_val_score"]
+            patience = checkpoint["patience"]
+            self.epoch = checkpoint["epoch"] + 1
+            self.optim.load_state_dict(checkpoint['optimizer'])
+            self.scheduler.load_state_dict(checkpoint['scheduler'])
+        else:
+            best_val_score = 1.0
+            patience = 0
+
+        while True:
+            self.train()
+
+            # val scores
+            scores = self.evaluate_metrics(self.dev_dataloader)
+            logger.info("Validation scores %s", scores)
+            val_score = scores[self.score]
+
+            # Prepare for next epoch
+            best = False
+            if val_score < best_val_score:
+                best_val_score = val_score
+                patience = 0
+                best = True
+            else:
+                patience += 1
+
+            exit_train = False
+
+            if patience == self.patience:
+                logger.info('patience reached.')
+                exit_train = True
+
+            self.save_checkpoint({
+                'best_val_score': best_val_score,
+                'patience': patience
+            })
+
+            if best:
+                copyfile(os.path.join(self.checkpoint_path, "last_model.pth"), 
+                        os.path.join(self.checkpoint_path, "best_model.pth"))
+
+            if exit_train:
+                break
+
+            self.epoch += 1
 
     def get_predictions(self):
-        raise NotImplementedError
+        if not os.path.isfile(os.path.join(self.checkpoint_path, 'best_model.pth')):
+            logger.error("Prediction require the model must be trained. There is no weights to load for model prediction!")
+            raise FileNotFoundError("Make sure your checkpoint path is correct or the best_model.pth is available in your checkpoint path")
+
+        self.load_checkpoint(os.path.join(self.checkpoint_path, "best_model.pth"))
+
+        self.model.eval()
+        results = {}
+        logger.info(f"Epoch {self.epoch+1} - Evaluating")
+        for item in self.test_dataloader:
+            with torch.no_grad():
+                item = item.to(self.device)
+                predicted_ids = self.model.generate(item)
+
+            gen_script = self.vocab.decode_script(predicted_ids)
+            gt_script = item.script
+            id = item.id[0]
+            results[id] = {
+                "prediction": gen_script[0],
+                "reference": gt_script[0]
+            }
+
+        predictions = [results[id]["prediction"] for id in results]
+        references = [results[id]["reference"] for id in results]
+        scores = evaluations.compute_metrics(references, predictions)
+        logger.info("Evaluation scores on test: %s", scores)
+
+        json.dump({
+            "results": results,
+            **scores,
+        }, open(os.path.join(self.checkpoint_path, "test_results.json"), "w+"), ensure_ascii=False, indent=4)

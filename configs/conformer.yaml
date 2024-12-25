@@ -32,7 +32,7 @@ dataset:
         n_ffts: 400
       type: CharacterDataset
     batch_size: 16
-    workers: 0
+    workers: 4
 
 vocab:
   type: CharacterVocab
@@ -40,9 +40,11 @@ vocab:
 training:
   checkpoint_path: saved_models
   learning_rate: 0.01
-  warmup: 10000
-  score: wer
-  patience: 5
+  use_amp: false
+  weight_decay: 0.00005
+  warmup: 1000
+  score: CER
+  patience: 20
 
 model:
   name: ConFormer_character_CTC
@@ -51,14 +53,14 @@ model:
   d_model: 144
   encoder:
     d_input: 80
-    d_model: 144
+    d_model: 128
     num_layers: 16
     conv_kernel_size: 31
-    ffwd_residual_factor: 0.5
-    ffwd_expansion_factor: 4
+    ffwd_residual_factor: 0.3
+    ffwd_expansion_factor: 2
     num_heads: 4
     dropout: 0.1
   decoder:
-    d_model: 144
-    num_layers: 3
+    d_model: 256
+    num_layers: 1
 
