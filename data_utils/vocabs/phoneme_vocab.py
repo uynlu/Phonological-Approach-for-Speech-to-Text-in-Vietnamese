@@ -183,7 +183,6 @@ class PhonemeVocabv2:
             "up", "ut", "uy", "uya", "uych",
             "uyên", "uyêt", "uyn", "uynh",
             "uyp", "uyt", "uyu",
-            
             "uach", "uai", "uan", "uang", "uanh", "uao", "uat", "uau", "uay",
             "uăc", "uăm", "uăn", "uăng", "uăp", "uăt", "uâc", "uât", "uoang",
             "ue", "uen", "ueo", "uet", "uên", "uêt", "uêu",
