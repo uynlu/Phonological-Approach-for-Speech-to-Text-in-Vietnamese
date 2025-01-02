@@ -1,4 +1,3 @@
-import torch
 from torch.utils.data import Dataset
 import torchaudio
 import json
@@ -19,7 +18,7 @@ class CharacterDataset(Dataset):
         self.vocab = vocab
         self.transformer = MelSpectrogram(config.transformer)
 
-        self._data: dict = json.load(open(config.json_path))
+        self._data: dict = json.load(open(config.json_path, encoding="utf8"))
         self._keys = list(self._data.keys())
 
     def __len__(self) -> int:
@@ -34,13 +33,16 @@ class CharacterDataset(Dataset):
         script = normalize_script(script)
         script_ids = self.vocab.encode_script(script)
 
+        shifted_right_script_ids = script_ids[1:]
+        script_ids = script_ids[:-1]
+
         audio_file = item["voice"]
         audio_file = audio_file.replace("mp3", "wav")
         voice, _ = torchaudio.load(os.path.join(self.voice_path, audio_file))
         voice = self.transformer.transform(voice)
         voice = voice.squeeze(0).transpose(0, 1)
         input_length = voice.shape[0]
-        target_length = script_ids.shape[0]
+        target_length = shifted_right_script_ids.shape[0]
 
         return Instance(
             id = key,
@@ -48,7 +50,8 @@ class CharacterDataset(Dataset):
             input_length=input_length,
             target_length=target_length,
             script = script,
-            labels = script_ids
+            labels = script_ids,
+            shifted_right_labels = shifted_right_script_ids
         )
 
 @META_DATASET.register()

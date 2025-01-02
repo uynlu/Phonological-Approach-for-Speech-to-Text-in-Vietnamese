@@ -51,8 +51,9 @@ class CharacterVocab:
             tokens.append(self.pad_token)
 
         token_ids = [self.character2idx[token] for token in tokens[:-1]] # skip the last blank token
+        token_ids = [self.bos_idx] + token_ids + [self.eos_idx]
 
-        vec = torch.tensor(token_ids)
+        vec = torch.tensor(token_ids).long()
 
         return vec
 
@@ -66,7 +67,6 @@ class CharacterVocab:
         for idx in ids:
             script.append(self.idx2character[idx])
 
-        # script = [k for k, _ in itertools.groupby(script)]
         script = "".join(script)
         words = script.split(self.pad_token)
         words = " ".join(words)
