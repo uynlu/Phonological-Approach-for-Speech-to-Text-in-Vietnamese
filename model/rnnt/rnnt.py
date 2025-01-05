@@ -1,149 +1,34 @@
 import torch
 import torch.nn as nn
-import torch.nn.functional as F
 from speechbrain.nnet.loss.transducer_loss import TransducerLoss
-
-
-# Acoustic model
-class Encoder(nn.Module):
-    def __init__(self, input_size, hidden_size, num_layers, dropout_prob):
-        super(Encoder, self).__init__()
-        self.hidden_size = hidden_size
-        self.num_layers = num_layers
-        self.dropout_prob = dropout_prob
-
-        self.lstm = nn.LSTM(
-            input_size=input_size,
-            hidden_size=self.hidden_size,
-            num_layers=self.num_layers,
-            bias=True,
-            batch_first=True,
-            dropout=self.dropout_prob,
-            bidirectional=True
-        )
-
-    def forward(self, inputs):  # inputs.size(): (batch_size, num_samples, num_mels)
-        outputs, _ = self.lstm(inputs)  # outputs.size(): (batch_size, num_samples, hidden_size * 2)
-        return outputs
-
-
-# Language model
-class Decoder(nn.Module):
-    def __init__(self, vocab, hidden_size, num_layers, dropout_prob):
-        super(Decoder, self).__init__()
-        self.vocab = vocab
-        self.embedding_size = len(self.vocab) - 4
-        self.hidden_size = hidden_size
-        self.num_layers = num_layers
-        self.dropout_prob = dropout_prob
-        self.start_symbol = self.vocab.bos_idx
-
-        self.embedding = nn.Embedding(
-            num_embeddings=len(self.vocab),
-            embedding_dim=self.embedding_size,
-            padding_idx=self.vocab.pad_idx
-        )
-
-        self.dropout = nn.Dropout(dropout_prob)
-
-        self.lstm = nn.LSTM(
-            input_size=self.embedding_size,
-            hidden_size=self.hidden_size,
-            num_layers=self.num_layers,
-            bias=True,
-            batch_first=True,
-            dropout=self.dropout_prob,
-            bidirectional=True
-        )
-    
-    def forward(self, inputs):  # inputs.size(): (batch_size, text_len)
-        batch_size = inputs.size()[0]
-        text_len = inputs.size()[1]
-        hidden_state = torch.zeros(self.num_layers * 2, batch_size, self.hidden_size)
-        cell = torch.zeros(self.num_layers * 2, batch_size, self.hidden_size)
-        outputs = []
-        for i in range(text_len + 1):
-            # if i == 0:
-            #     decoder_input = torch.tensor([self.start_symbol] * batch_size, device=inputs.device)
-            # else:
-            decoder_input = inputs[:, i].unsqueeze(-1)
-            output, hidden_state, cell = self.forward_one_step(decoder_input, hidden_state, cell)
-            outputs.append(output)
-        outputs = torch.stack(outputs, dim=1)  # outputs.size(): (batch_size, text_len + 1, hidden_size * 2)
-
-        return outputs
-
-
-    def forward_one_step(
-            self,
-            input,  # input.size(): (batch_size, 1)
-            previous_hidden_state,  # hidden_state.size(): num_layers * 2, batch_size, hidden_size
-            previos_cell
-        ):
-        embeddeding = (self.dropout(self.embedding(input)))  # embeddeding.size(): (batch_size, 1, embedding_size)
-        output, (hidden_state, cell) = self.lstm(embeddeding, (previous_hidden_state, previos_cell))
-        # output.size(): (batch_size, 1, 2 * hidden_size)
-        # hidden_state.size(): (2 * num_layers, batch_size, hidden_size)
-
-        return output, hidden_state, cell
-
-
-class Joiner(nn.Module):
-    MODES = {
-        "multiplicative": lambda outputs_encoder, outputs_decoder: outputs_encoder * outputs_decoder,
-        "additive": lambda outputs_encoder, outputs_decoder: outputs_encoder + outputs_decoder,
-        # "cat": lambda outputs_encoder, outputs_decoder: torch.cat((outputs_encoder, outputs_decoder), dim=1)
-    }
-
-    def __init__(self, hidden_size, vocab, mode):
-        super(Joiner, self).__init__()
-
-        self.vocab = vocab
-        self.join = self.MODES[mode]
-
-        self.linear = nn.Linear(
-            in_features=hidden_size * 2,
-            out_features=len(self.vocab)
-        )
-
-    def forward(
-            self,
-            outputs_encoder,  # outputs_encoder.size(): (batch_size, num_samples, hidden_size * 2)
-            outputs_decoder,  # outputs_decoder.size(): (batch_size, text_len + 1, hidden_size * 2)
-        ):
-        outputs_encoder = outputs_encoder.unsqueeze(2)  # outputs_encoder.size(): (batch_size, num_samples, 1, hidden_size * 2)
-        outputs_decoder = outputs_decoder.unsqueeze(1)  # outputs_decoder.size(): (batch_size, 1, text_len + 1, hidden_size * 2)
-
-        outputs = self.join(outputs_encoder, outputs_decoder)  # outputs.size(): (batch_size, num_samples, text_len + 1, hidden_size * 2)
-
-        outputs = self.linear(outputs)  # outputs.size(): (batch_size, num_samples, text_len + 1, len_vocab)
-        
-        outputs = F.softmax(outputs, dim=-1)
-
-        return outputs
+from model.rnnt.encoder import Encoder
+from model.rnnt.decoder import Decoder
+from model.rnnt.joiner import Joiner
 
 
 class RNNT(nn.Module):
-    def __init__(self, vocab, input_size, hidden_size = 512, num_layers_encoder = 5, num_layers_decoder = 2, dropout_prob = 0.2, mode = "additive"):
+    def __init__(self, vocab, input_size, device, hidden_size = 512, num_layers_encoder = 5, num_layers_decoder = 2, dropout_prob = 0.2, mode = "additive"):
         super(RNNT, self).__init__()
         self.vocab = vocab
+        self.device = device
+
         self.encoder = Encoder(
             input_size,
             hidden_size = hidden_size,
             num_layers = num_layers_encoder,
             dropout_prob = dropout_prob
-        )
+        ).to(self.device)
         self.decoder = Decoder(
             vocab=self.vocab,
             hidden_size = hidden_size,
             num_layers = num_layers_decoder,
             dropout_prob = dropout_prob
-        )
+        ).to(self.device)
         self.joiner = Joiner(
             hidden_size=hidden_size,
             vocab=self.vocab,
             mode=mode
-        )
+        ).to(self.device)
 
     def compute_loss(
             self,
@@ -170,7 +55,7 @@ class RNNT(nn.Module):
             outputs = [self.decoder.start_symbol]
             hidden_state = self.decoder.initial_state.unsqueeze(0)
             while t < signal_lens[b] and u < max_len:
-                decoder_input = torch.tensor([outputs[-1]], device = signals.device)
+                decoder_input = torch.tensor([outputs[-1]], device = self.device)
                 output, hidden_state = self.decoder.forward_one_step(decoder_input, hidden_state)
                 feature_t = outputs_encoder[b, t]
                 output_joiner = self.joiner.forward(feature_t, output)
