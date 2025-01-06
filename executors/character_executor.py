@@ -40,7 +40,6 @@ class CharacterBasedExecutor(BaseExecutor):
             for item in dataloader:
                 with torch.no_grad():
                     print(item)
-                    print(item[0])
                     item = item.to(self.device)
                     predicted_ids = self.model.generate(item)
 
