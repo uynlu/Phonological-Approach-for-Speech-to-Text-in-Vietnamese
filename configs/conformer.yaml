@@ -2,8 +2,8 @@ executor: CharacterBasedExecutor
 
 dataset:
     train: 
-      json_path: data_sets/common-voice/train.json
-      voice_path: data_sets/common-voice/wav-voices
+      json_path: /kaggle/working/common_voice/train.json
+      voice_path: /kaggle/working/common_voice/wav-voices
       transformer:
         sampling_rate: 16000
         n_mels: 80
@@ -12,8 +12,8 @@ dataset:
         n_ffts: 400
       type: CharacterDataset
     dev:
-      json_path: data_sets/common-voice/dev.json
-      voice_path: data_sets/common-voice/wav-voices
+      json_path: /kaggle/working/common_voice/dev.json
+      voice_path: /kaggle/working/common_voice/wav-voices
       transformer:
         sampling_rate: 16000
         n_mels: 80
@@ -22,8 +22,8 @@ dataset:
         n_ffts: 400
       type: CharacterDataset
     test:
-      json_path: data_sets/common-voice/test.json
-      voice_path: data_sets/common-voice/wav-voices
+      json_path: /kaggle/working/common_voice/test.json
+      voice_path: /kaggle/working/common_voice/wav-voices
       transformer:
         sampling_rate: 16000
         n_mels: 80
