@@ -80,13 +80,11 @@ class ConFormer(nn.Module):
     def generate(self, items: InstanceList):
         voice_tensor = items.voice
         input_lengths = items.input_length
-        print(items.script)
         input_lengths = [((length - 1) // 2 - 1) // 2 for length in input_lengths] # account for subsampling of time dimension
 
         logits = self.forward_step(voice_tensor, input_lengths)
-        print(logits)
+        print(f"logits: {logits.size()}")
         predicted_ids = logits.argmax(dim=-1)
-        print(predicted_ids)
         return predicted_ids
 
 @META_MODEL.register()
