@@ -39,7 +39,6 @@ class CharacterBasedExecutor(BaseExecutor):
         with tqdm(desc='Epoch %d - Evaluation' % self.epoch, unit='it', total=len(dataloader)) as pbar:
             for item in dataloader:
                 with torch.no_grad():
-                    print(item)
                     item = item.to(self.device)
                     predicted_ids = self.model.generate(item)
 
@@ -76,4 +75,3 @@ class CharacterBasedExecutor(BaseExecutor):
                     "Loss": running_loss / ith
                 })
                 pbar.update()
-
