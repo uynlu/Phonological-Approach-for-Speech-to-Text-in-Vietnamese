@@ -65,7 +65,6 @@ class ConFormer(nn.Module):
         target_lengths = items.target_length
 
         logits = self.forward_step(voice_tensor, input_lengths)
-        print(logits)
         logits = logits.permute((1, 0, -1)) # (len, bs, vocab_size)
 
         loss = self.loss_fn(logits, labels, input_lengths, target_lengths)
@@ -76,7 +75,7 @@ class ConFormer(nn.Module):
         mask = generate_3D_padding_mask(voice_tensor, lengths).to(self.device)
         features = self.encoder(voice_tensor, mask)
         logits = self.decoder(features)
-
+        print(logits)
         return logits
     
     def generate(self, items: InstanceList):
