@@ -86,7 +86,7 @@ class ConFormer(nn.Module):
         logits = self.forward_step(voice_tensor, input_lengths)
         print(logits)
         predicted_ids = logits.argmax(dim=-1)
-
+        print(predicted_ids)
         return predicted_ids
 
 @META_MODEL.register()
