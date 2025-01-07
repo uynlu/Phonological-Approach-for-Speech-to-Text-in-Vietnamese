@@ -26,5 +26,5 @@ class LSTMDecoder(nn.Module):
         x, _ = self.lstm(x)
         logits = self.linear(x)
         logits = nn.functional.log_softmax(logits, dim=-1)
-
+        print(logits)
         return logits
