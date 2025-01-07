@@ -71,10 +71,10 @@ class ConFormer(nn.Module):
 
         return logits, loss
     
-    def forward_step(self, voice_tensor: torch.Tensor, lengths: torch.Tensor, flag=0) -> torch.Tensor:
+    def forward_step(self, voice_tensor: torch.Tensor, lengths: torch.Tensor) -> torch.Tensor:
         mask = generate_3D_padding_mask(voice_tensor, lengths).to(self.device)
         features = self.encoder(voice_tensor, mask)
-        logits = self.decoder(features, flag=flag)
+        logits = self.decoder(features)
         return logits
     
     def generate(self, items: InstanceList):
@@ -82,7 +82,7 @@ class ConFormer(nn.Module):
         input_lengths = items.input_length
         input_lengths = [((length - 1) // 2 - 1) // 2 for length in input_lengths] # account for subsampling of time dimension
 
-        logits = self.forward_step(voice_tensor, input_lengths, flag=1)
+        logits = self.forward_step(voice_tensor, input_lengths)
         predicted_ids = logits.argmax(dim=-1)
         return predicted_ids
 

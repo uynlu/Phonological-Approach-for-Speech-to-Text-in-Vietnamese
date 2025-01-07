@@ -22,11 +22,8 @@ class LSTMDecoder(nn.Module):
         self.lstm = nn.LSTM(input_size=d_encoder, hidden_size=d_decoder, num_layers=num_layers, batch_first=True)
         self.linear = nn.Linear(d_decoder, num_classes)
 
-    def forward(self, x, flag):
+    def forward(self, x):
         x, _ = self.lstm(x)
         logits = self.linear(x)
         logits = nn.functional.log_softmax(logits, dim=-1)
-        if flag==1:
-            print(logits.size())
-            print(logits)
         return logits
