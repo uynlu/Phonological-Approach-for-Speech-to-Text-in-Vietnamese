@@ -43,10 +43,11 @@ class CharacterBasedExecutor(BaseExecutor):
                     predicted_ids = self.model.generate(item)
 
                 gt_scripts.append(item.script[0])
-                gen_scripts.append(self.vocab.decode_script(predicted_ids)[0])
+                gen_scripts.append(self.vocab.decode_script(predicted_ids))
                 
                 pbar.update()
-
+        print(gt_scripts)
+        print(gen_scripts)
         scores= evaluations.compute_metrics(gt_scripts, gen_scripts)
 
         return scores
