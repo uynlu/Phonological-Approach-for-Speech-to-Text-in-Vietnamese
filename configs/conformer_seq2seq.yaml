@@ -54,7 +54,7 @@ model:
   encoder:
     d_input: 80
     d_model: 128
-    num_layers: 5
+    num_layers: 50
     conv_kernel_size: 31
     ffwd_residual_factor: 0.3
     ffwd_expansion_factor: 2
@@ -63,7 +63,7 @@ model:
   decoder:
     embedding_dim: 128
     d_model: 128
-    num_layers: 2
+    num_layers: 10
     nhead: 4
     d_ffwd: 1024
     dropout: 0.1
