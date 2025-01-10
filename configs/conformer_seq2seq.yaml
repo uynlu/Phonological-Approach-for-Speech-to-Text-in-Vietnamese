@@ -2,7 +2,7 @@ executor: CharacterBasedExecutor
 
 dataset:
     train: 
-      json_path: /kaggle/working/common_voice/dev.json
+      json_path: /kaggle/working/common_voice/train.json
       voice_path: /kaggle/working/common_voice/wav-voices
       transformer:
         sampling_rate: 16000
