@@ -6,30 +6,30 @@ dataset:
       voice_path: /kaggle/working/common_voice/wav-voices
       transformer:
         sampling_rate: 16000
-        n_mels: 80
-        win_length: null
-        hop_length: 160
-        n_ffts: 400
+        n_mels: 64
+        win_length: 400
+        hop_length: 512
+        n_ffts: 1024
       type: CharacterDataset
     dev:
       json_path: /kaggle/working/common_voice/dev.json
       voice_path: /kaggle/working/common_voice/wav-voices
       transformer:
         sampling_rate: 16000
-        n_mels: 80
-        win_length: null
-        hop_length: 160
-        n_ffts: 400
+        n_mels: 64
+        win_length: 400
+        hop_length: 512
+        n_ffts: 1024
       type: CharacterDataset
     test:
       json_path: /kaggle/working/common_voice/test.json
       voice_path: /kaggle/working/common_voice/wav-voices
       transformer:
         sampling_rate: 16000
-        n_mels: 80
-        win_length: null
-        hop_length: 160
-        n_ffts: 400
+        n_mels: 64
+        win_length: 400
+        hop_length: 512
+        n_ffts: 1024
       type: CharacterDataset
     batch_size: 16
     workers: 4
@@ -39,7 +39,7 @@ vocab:
 
 training:
   checkpoint_path: saved_models
-  learning_rate: 0.1
+  learning_rate: 0.01
   use_amp: false
   weight_decay: 0.00005
   warmup: 1000
@@ -52,7 +52,7 @@ model:
   device: cuda
   d_model: 144
   encoder:
-    d_input: 80
+    d_input: 64
     d_model: 128
     num_layers: 50
     conv_kernel_size: 31
