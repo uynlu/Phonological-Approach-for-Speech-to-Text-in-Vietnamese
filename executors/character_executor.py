@@ -22,7 +22,7 @@ class CharacterBasedExecutor(BaseExecutor):
             betas=(.9, .98),
             eps=1e-05 if config.training.use_amp else 1e-09,
             weight_decay=config.training.weight_decay
-            )
+        )
         self.grad_scaler = torch.amp.GradScaler(enabled=config.training.use_amp)
 
     def configuring_hyperparameters(self, config):
@@ -46,6 +46,9 @@ class CharacterBasedExecutor(BaseExecutor):
                 gen_scripts.append(self.vocab.decode_script(predicted_ids))
                 
                 pbar.update()
+        
+        print(gt_scripts)
+        print(gen_scripts)
         
         scores= evaluations.compute_metrics(gt_scripts, gen_scripts)
 
