@@ -83,9 +83,8 @@ class ConFormer(nn.Module):
         input_lengths = [((length - 1) // 2 - 1) // 2 for length in input_lengths] # account for subsampling of time dimension
 
         logits = self.forward_step(voice_tensor, input_lengths)
+        print(logits)
         predicted_ids = logits.argmax(dim=-1)
-        print(predicted_ids.size())
-        print(predicted_ids)
         return predicted_ids
 
 @META_MODEL.register()
@@ -180,7 +179,6 @@ class ConFormer_seq2seq(nn.Module):
 
         encoder_features = self.forward_encoder(voice_tensor, input_lengths)
         logits = self.forward_decoder(encoder_features, input_lengths, shifted_right_labels, input_lengths)
-        print(logits)
         logits = self.fc(logits)
         predicted_ids = logits.argmax(dim=-1)
 
