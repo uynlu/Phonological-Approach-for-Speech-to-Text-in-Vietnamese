@@ -47,8 +47,8 @@ class CharacterBasedExecutor(BaseExecutor):
                 
                 pbar.update()
         
-        print(gt_scripts)
-        print(gen_scripts)
+            print(gt_scripts)
+            print(gen_scripts)
         
         scores= evaluations.compute_metrics(gt_scripts, gen_scripts)
 
@@ -59,7 +59,6 @@ class CharacterBasedExecutor(BaseExecutor):
         running_loss = .0
         with tqdm(desc='Epoch %d - Training' % self.epoch, unit='it', total=len(self.train_dataloader)) as pbar:
             for ith, items in enumerate(self.train_dataloader, start=1):
-                self.scheduler.step()
                 # forward pass
                 items = items.to(self.device)
                 _, loss = self.model(items)
@@ -69,6 +68,8 @@ class CharacterBasedExecutor(BaseExecutor):
                 self.grad_scaler.scale(loss).backward()
                 self.grad_scaler.step(self.optim)
                 self.grad_scaler.update()
+
+                self.scheduler.step()
 
                 # update the training status
                 this_loss = loss.item()

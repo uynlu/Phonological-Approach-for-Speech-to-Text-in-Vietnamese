@@ -27,7 +27,7 @@ class CharacterVocab:
             "r", "s", "t", "v", "x", 
             "f", "z", "w", "j"
         ]
-        characters = [self.pad_token, self.bos_token, self.eos_token] +  characters
+        characters = [self.pad_token, self.bos_token, self.eos_token] + characters
         self.character2idx = {
             phoneme: idx for idx, phoneme in enumerate(characters)
         }

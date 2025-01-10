@@ -136,10 +136,10 @@ class ConFormer_seq2seq(nn.Module):
         labels = items.labels
         shifted_right_labels = items.shifted_right_labels
         input_lengths = items.input_length
-        input_lengths = [((length - 1) // 2 - 1) // 2 for length in input_lengths] # account for subsampling of time dimension
+        encoder_lengths = [((length - 1) // 2 - 1) // 2 for length in input_lengths] # account for subsampling of time dimension
 
         encoder_features = self.forward_encoder(voice_tensor, input_lengths)
-        logits = self.forward_decoder(encoder_features, input_lengths, shifted_right_labels, input_lengths)
+        logits = self.forward_decoder(encoder_features, encoder_lengths, shifted_right_labels, input_lengths)
         logits = logits.permute((1, 0, -1)) # (len, bs, vocab_size)
         logits = self.fc(logits)
 
