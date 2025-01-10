@@ -83,7 +83,6 @@ class ConFormer(nn.Module):
         input_lengths = [((length - 1) // 2 - 1) // 2 for length in input_lengths] # account for subsampling of time dimension
 
         logits = self.forward_step(voice_tensor, input_lengths)
-        print(logits)
         predicted_ids = logits.argmax(dim=-1)
         return predicted_ids
 
