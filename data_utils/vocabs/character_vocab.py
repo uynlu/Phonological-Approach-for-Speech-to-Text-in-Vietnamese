@@ -66,7 +66,8 @@ class CharacterVocab:
         ids = tensor_script.squeeze(0).long().tolist()
         script = []
         for idx in ids:
-            script.append(self.idx2character[idx])
+            if idx != 0:
+                script.append(self.idx2character[idx])
 
         script = "".join(script)
         words = script.split(self.pad_token)
