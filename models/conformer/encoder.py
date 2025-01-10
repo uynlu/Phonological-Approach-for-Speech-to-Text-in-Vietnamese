@@ -326,7 +326,8 @@ class ConformerEncoder(nn.Module):
     x = self.conv_subsample(x)
 
     mask = mask[:, :-2:2, :-2:2] # account for subsampling
-    # mask = mask[:, :-2:2, :-2:2] # account for subsampling
+    mask = mask[:, :-2:2, :-2:2] # account for subsampling
+    print(mask)
     assert mask.shape[1] == x.shape[1], f'{mask.shape} {x.shape}'
     
     x = self.linear_proj(x)
