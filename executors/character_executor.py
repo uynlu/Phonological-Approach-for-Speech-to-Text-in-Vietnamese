@@ -46,8 +46,7 @@ class CharacterBasedExecutor(BaseExecutor):
                 gen_scripts.append(self.vocab.decode_script(predicted_ids))
                 
                 pbar.update()
-        print(gt_scripts)
-        print(gen_scripts)
+        
         scores= evaluations.compute_metrics(gt_scripts, gen_scripts)
 
         return scores

@@ -62,7 +62,6 @@ class CharacterVocab:
             tensorscript: (1, seq_len)
         '''
         # remove duplicated token
-        print(tensor_script)
         ids = tensor_script.squeeze(0).long().tolist()
         script = []
         for idx in ids:
