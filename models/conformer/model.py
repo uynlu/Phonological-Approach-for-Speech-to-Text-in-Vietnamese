@@ -19,8 +19,10 @@ from typing import Tuple
 
 from .encoder import ConformerEncoder
 from .modules import Linear
+from builders.model_builder import META_MODEL
 
 
+@META_MODEL.register()
 class Conformer(nn.Module):
     """
     Conformer: Convolution-augmented Transformer for Speech Recognition
