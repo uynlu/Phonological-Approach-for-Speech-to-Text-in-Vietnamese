@@ -1,1 +1,1 @@
-from models.conformer import ConFormer
+from models.conformer import Conformer
