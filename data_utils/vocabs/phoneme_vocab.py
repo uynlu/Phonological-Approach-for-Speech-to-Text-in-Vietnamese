@@ -1,11 +1,10 @@
 import torch
 
-from builders.vocab_builder import META_VOCAB
 from data_utils.utils import is_Vietnamese, decompose_non_vietnamese_word, compose_word, split_phoneme
 
-@META_VOCAB.register()
+
 class PhonemeVocabv1:
-    def __init__(self, config):
+    def __init__(self):
         self.pad_token = "<pad>"
         self.bos_token = "<bos>"
         self.eos_token = "<eos>"
@@ -122,7 +121,7 @@ class PhonemeVocabv1:
 
         return refined_script
 
-@META_VOCAB.register()
+
 class PhonemeVocabv2:
     '''
         Turn words into continuous senquences of phoneme

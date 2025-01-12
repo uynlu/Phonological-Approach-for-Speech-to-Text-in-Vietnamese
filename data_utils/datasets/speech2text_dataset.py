@@ -3,22 +3,31 @@ import torchaudio
 import json
 import os
 
-from builders.dataset_builder import META_DATASET
 from data_utils.vocabs.character_vocab import CharacterVocab
 from data_utils.utils import normalize_script
 from utils.instance import Instance
 from data_utils.utils import MelSpectrogram
 
-@META_DATASET.register()
+
 class CharacterDataset(Dataset):
-    def __init__(self, config, vocab: CharacterVocab):
+    def __init__(
+            self,
+            voice_path,
+            sampling_rate,
+            n_mels,
+            win_length,
+            hop_length,
+            n_ffts,
+            json_path,
+            vocab: CharacterVocab
+        ):
         super().__init__()
 
-        self.voice_path = config.voice_path
+        self.voice_path = voice_path
         self.vocab = vocab
-        self.transformer = MelSpectrogram(config.transformer)
+        self.transformer = MelSpectrogram(sampling_rate, n_mels, win_length, hop_length, n_ffts)
 
-        self._data: dict = json.load(open(config.json_path, encoding="utf8"))
+        self._data: dict = json.load(open(json_path, encoding="utf8"))
         self._keys = list(self._data.keys())
 
     def __len__(self) -> int:
@@ -54,7 +63,7 @@ class CharacterDataset(Dataset):
             shifted_right_labels = shifted_right_script_ids
         )
 
-@META_DATASET.register()
+
 class PhonemeDataset(CharacterDataset):
     def __getitem__(self, idx: int) -> dict:
         key = self._keys[idx]

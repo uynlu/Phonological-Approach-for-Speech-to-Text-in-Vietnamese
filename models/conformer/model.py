@@ -1,16 +1,3 @@
-# Copyright (c) 2021, Soohwan Kim. All rights reserved.
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#     http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
 
 import torch
 import torch.nn as nn
@@ -19,10 +6,8 @@ from typing import Tuple
 
 from .encoder import ConformerEncoder
 from .modules import Linear
-from builders.model_builder import META_MODEL
 
 
-@META_MODEL.register()
 class Conformer(nn.Module):
     """
     Conformer: Convolution-augmented Transformer for Speech Recognition
@@ -53,8 +38,7 @@ class Conformer(nn.Module):
     """
     def __init__(
             self,
-            config,
-            num_classes: int = 96,
+            num_classes: int,
             input_dim: int = 80,
             encoder_dim: int = 512,
             num_encoder_layers: int = 17,
@@ -84,7 +68,6 @@ class Conformer(nn.Module):
             half_step_residual=half_step_residual,
         )
         self.fc = Linear(encoder_dim, num_classes, bias=False)
-        # loss = nn.CTCLoss().to(device)
 
     def count_parameters(self) -> int:
         """ Count parameters of encoder """
@@ -110,10 +93,3 @@ class Conformer(nn.Module):
         outputs = self.fc(encoder_outputs)
         outputs = nn.functional.log_softmax(outputs, dim=-1)
         return outputs, encoder_output_lengths
-
-    def generate(self, inputs: Tensor, input_lengths: Tensor):
-        encoder_outputs, encoder_output_lengths = self.encoder(inputs, input_lengths)
-        outputs = self.fc(encoder_outputs)
-        outputs = nn.functional.log_softmax(outputs, dim=-1)
-        predicted_ids = outputs.argmax(dim=-1)
-        return predicted_ids

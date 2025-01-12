@@ -348,38 +348,45 @@ def collate_fn(items: list[dict]) -> torch.Tensor:
     }
 
 class MelSpectrogram(nn.Module):
-    def __init__(self, config):
-        # sample_rate: tần suất lấy mẫu (16000 điểm/s)
-        # n_mels: chiều cao của Mel Spectrogram?
-        # win_length: (nếu chiều dài của data là 800 => 2 window)
-        # hop_length: bước nhảy (stride)
-        # n_ffts: chiều dài mỗi Time-Section
+    def __init__(
+            self,
+            sampling_rate,
+            n_mels,
+            win_length,
+            hop_length,
+            n_ffts
+        ):
 
         super().__init__()
 
         self.transform = transforms.MelSpectrogram(
-            sample_rate=config.sampling_rate,
-            n_mels=config.n_mels, 
-            win_length=config.win_length,
-            hop_length=config.hop_length,
-            n_fft=config.n_ffts
+            sample_rate=sampling_rate,
+            n_mels=n_mels, 
+            win_length=win_length,
+            hop_length=hop_length,
+            n_fft=n_ffts
         )
 
     def forward(self, input):
         return self.transform(input)
 
 class MFCC(nn.Module):
-    def __init__(self, config):
+    def __init__(
+            self,
+            sampling_rate,
+            n_mfcc,
+            n_mels,
+            hop_length,
+            n_ffts
+        ):
         super().__init__()
         
         self.transform = transforms.MFCC(
-            sample_rate=config.sample_rate,
-            n_mfcc=config.n_mfcc,
-            melkwargs={
-                "n_mels": config.n_mels,
-                "n_fft": config.n_ffts,
-                "hop_length": config.hop_length
-            }
+            sample_rate=sampling_rate,
+            n_mfcc=n_mfcc,
+            n_mels=n_mels,
+            n_fft=n_ffts,
+            hop_length=hop_length
         )
 
     def forward(self, input):

@@ -1,10 +1,8 @@
 import torch
 
-from builders.vocab_builder import META_VOCAB
 
-@META_VOCAB.register()
 class CharacterVocab:
-    def __init__(self, config):
+    def __init__(self):
         self.pad_token = "<pad>"
         self.bos_token = "<bos>"
         self.eos_token = "<eos>"
