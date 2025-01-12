@@ -61,10 +61,10 @@ class Excutor:
             collate_fn=self.collate_fn
         )
     
-    def train(self, print_interval=20):
+    def train(self, e, print_interval=20):
         self.model.train()
         running_loss = .0
-        with tqdm(desc='Epoch %d - Training' % 1, unit='it', total=len(self.train_dataloader)) as pbar:
+        with tqdm(desc='Epoch %d - Training' % e, unit='it', total=len(self.train_dataloader)) as pbar:
             for ith, items in enumerate(self.train_dataloader, start=1):
                 items = items.to(self.device)
                 inputs = items.voice.to(self.device)  # (batch_size, sequence_length, dim)
@@ -88,11 +88,11 @@ class Excutor:
                 })
                 pbar.update()
 
-    def evaluate(self, print_interval=10):
+    def evaluate(self, e, print_interval=10):
         self.model.eval()
         gen_scripts = []
         gt_scripts = []
-        with tqdm(desc='Epoch %d - Evaluation' % 1, unit='it', total=len(self.dev_dataloader)) as pbar:
+        with tqdm(desc='Epoch %d - Evaluation' % e, unit='it', total=len(self.dev_dataloader)) as pbar:
             for item in self.dev_dataloader:
                 with torch.no_grad():
                     item = item.to(self.device)
@@ -115,9 +115,9 @@ class Excutor:
         print("Evaluation scores on test: %s", scores)
 
     def run(self, num_epochs):
-        for _ in range(num_epochs):
-            self.train()
-            self.evaluate()
+        for e in range(num_epochs):
+            self.train(e)
+            self.evaluate(e)
 
     def save_checkpoint(self):
         pass
