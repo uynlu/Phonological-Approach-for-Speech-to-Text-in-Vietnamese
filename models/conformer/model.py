@@ -71,12 +71,13 @@ class Conformer(nn.Module):
             conv_kernel_size=conv_kernel_size,
             half_step_residual=half_step_residual,
         )
-        self.decoder = LSTMDecoder(
-            d_encoder=encoder_dim,
-            d_decoder=decoder_dim,
-            num_classes=vocab.size,
-            num_layers=num_decoder_layers
-        )
+        # self.decoder = LSTMDecoder(
+        #     d_encoder=encoder_dim,
+        #     d_decoder=decoder_dim,
+        #     num_classes=vocab.size,
+        #     num_layers=num_decoder_layers
+        # )
+        self.fc = nn.Linear(encoder_dim, num_classes)
 
     def count_parameters(self) -> int:
         """ Count parameters of encoder """
@@ -99,5 +100,6 @@ class Conformer(nn.Module):
             * predictions (torch.FloatTensor): Result of model predictions.
         """
         encoder_outputs, encoder_output_lengths = self.encoder(inputs, input_lengths)
-        outputs = self.decoder(encoder_outputs)
+        logits = self.fc(encoder_outputs)
+        outputs = nn.functional.log_softmax(logits, dim=-1)
         return outputs, encoder_output_lengths
