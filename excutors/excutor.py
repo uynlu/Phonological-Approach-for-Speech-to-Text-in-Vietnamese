@@ -98,7 +98,7 @@ class Excutor:
                     item = item.to(self.device)
                     inputs = item.voice.to(self.device)
                     input_length = torch.LongTensor(item.input_length).to(self.device)
-                    target = item.labels.to(self.device)
+                    target = item.script.to(self.device)
 
                     outputs, _ = self.model(inputs, input_length)
                     predicted_ids = outputs.argmax(-1)
