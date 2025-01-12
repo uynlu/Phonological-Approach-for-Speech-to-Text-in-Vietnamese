@@ -79,7 +79,8 @@ class Excutor:
                 self.grad_scaler.scale(loss).backward()
                 self.grad_scaler.step(self.optim)
                 self.grad_scaler.update()
-
+                torch.nn.utils.clip_grad_norm_(self.model.parameters(), max_norm=1.0)
+                
                 this_loss = loss.item()
                 running_loss += this_loss
 
