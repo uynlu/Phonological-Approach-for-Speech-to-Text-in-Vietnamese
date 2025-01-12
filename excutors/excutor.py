@@ -120,8 +120,8 @@ class Excutor:
         while True:
             if self.epoch > num_epochs:
                 break
-            self.train(self.epoch)
-            self.evaluate(self.epoch)
+            self.train()
+            self.evaluate()
             self.save_checkpoint()
             self.epoch += 1
 
