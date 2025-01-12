@@ -4,8 +4,8 @@ import torch
 class CharacterVocab:
     def __init__(self):
         self.pad_token = "<pad>"
-        self.bos_token = "<bos>"
-        self.eos_token = "<eos>"
+        # self.bos_token = "<bos>"
+        # self.eos_token = "<eos>"
 
         characters = [
             "a", "á", "à", "ả", "ã", "ạ",
@@ -25,17 +25,18 @@ class CharacterVocab:
             "r", "s", "t", "v", "x", 
             "f", "z", "w", "j"
         ]
-        characters = [self.pad_token, self.bos_token, self.eos_token] + characters
+        # characters = [self.pad_token, self.bos_token, self.eos_token] + characters
+        characters = [self.pad_token] + characters
         self.character2idx = {
             phoneme: idx for idx, phoneme in enumerate(characters)
         }
         self.idx2character = {idx: phoneme for phoneme, idx in self.character2idx.items()}
         
         self.pad_idx = self.character2idx[self.pad_token]
-        self.bos_idx = self.character2idx[self.bos_token]
-        self.eos_idx = self.character2idx[self.eos_token]
+        # self.bos_idx = self.character2idx[self.bos_token]
+        # self.eos_idx = self.character2idx[self.eos_token]
 
-        self.special_ids = [self.pad_idx, self.bos_idx, self.eos_idx]
+        self.special_ids = [self.pad_idx]
     
     @property
     def size(self) -> int:
@@ -49,7 +50,7 @@ class CharacterVocab:
             tokens.append(self.pad_token)
 
         token_ids = [self.character2idx[token] for token in tokens[:-1]] # skip the last blank token
-        token_ids = [self.bos_idx] + token_ids + [self.eos_idx]
+        # token_ids = [self.bos_idx] + token_ids + [self.eos_idx]
 
         vec = torch.tensor(token_ids).long()
 

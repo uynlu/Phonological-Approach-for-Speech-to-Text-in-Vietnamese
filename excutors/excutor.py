@@ -5,6 +5,7 @@ from torch.optim import AdamW
 from torch.amp import GradScaler
 
 from tqdm import tqdm
+import os
 
 from utils.instance import Instance, InstanceList
 import evaluations
@@ -34,6 +35,7 @@ class Excutor:
 
         self.grad_scaler = GradScaler(enabled=use_amp)
         self.loss = nn.CTCLoss(zero_infinity=True).to(device)
+        self.epoch = 1
     
     def collate_fn(self, instances: list[Instance]) -> InstanceList:
         return InstanceList(instances, self.vocab.pad_idx)
@@ -61,10 +63,10 @@ class Excutor:
             collate_fn=self.collate_fn
         )
     
-    def train(self, e, print_interval=20):
+    def train(self):
         self.model.train()
         running_loss = .0
-        with tqdm(desc='Epoch %d - Training' % e, unit='it', total=len(self.train_dataloader)) as pbar:
+        with tqdm(desc='Epoch %d - Training' % self.epoch, unit='it', total=len(self.train_dataloader)) as pbar:
             for ith, items in enumerate(self.train_dataloader, start=1):
                 items = items.to(self.device)
                 inputs = items.voice.to(self.device)  # (batch_size, sequence_length, dim)
@@ -88,11 +90,11 @@ class Excutor:
                 })
                 pbar.update()
 
-    def evaluate(self, e, print_interval=10):
+    def evaluate(self):
         self.model.eval()
         gen_scripts = []
         gt_scripts = []
-        with tqdm(desc='Epoch %d - Evaluation' % e, unit='it', total=len(self.dev_dataloader)) as pbar:
+        with tqdm(desc='Epoch %d - Evaluation' % self.epoch, unit='it', total=len(self.dev_dataloader)) as pbar:
             for item in self.dev_dataloader:
                 with torch.no_grad():
                     item = item.to(self.device)
@@ -115,10 +117,44 @@ class Excutor:
         print("Evaluation scores on test: %s", scores)
 
     def run(self, num_epochs):
-        for e in range(num_epochs):
-            self.train(e)
-            self.evaluate(e)
+        while True:
+            if self.epoch > num_epochs:
+                break
+            self.train(self.epoch)
+            self.evaluate(self.epoch)
+            self.save_checkpoint()
+            self.epoch += 1
 
+    def get_predictions(self):
+        self.load_checkpoint(os.path.join(self.checkpoint_path, "best_model.pth"))
+
+        self.model.eval()
+        results = {}
+        # logger.info(f"Epoch {self.epoch+1} - Evaluating")
+        for item in self.test_dataloader:
+            with torch.no_grad():
+                item = item.to(self.device)
+                inputs = item.voice.to(self.device)
+                input_length = torch.LongTensor(item.input_length).to(self.device)
+                target = item.script
+
+                outputs, _ = self.model(inputs, input_length)
+                predicted_ids = outputs.argmax(-1)
+
+            gen_script = self.vocab.decode_script(predicted_ids)
+            gt_script = item.script
+            id = item.id[0]
+            results[id] = {
+                "prediction": gen_script[0],
+                "reference": gt_script[0]
+            }
+
+        predictions = [results[id]["prediction"] for id in results]
+        references = [results[id]["reference"] for id in results]
+        scores = evaluations.compute_metrics(references, predictions)
+        
     def save_checkpoint(self):
         pass
     
+    def load_checkpoint(self):
+        pass
