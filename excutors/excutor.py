@@ -103,7 +103,7 @@ class Excutor:
                     outputs, _ = self.model(inputs, input_length)
                     predicted_ids = outputs.argmax(-1)
 
-                gt_scripts.append(target)
+                gt_scripts.append(target[0])
                 gen_scripts.append(self.vocab.decode_script(predicted_ids))
                 
                 pbar.update()
