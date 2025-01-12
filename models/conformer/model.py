@@ -39,7 +39,6 @@ class Conformer(nn.Module):
     """
     def __init__(
             self,
-            vocab,
             num_classes: int,
             input_dim: int = 80,
             encoder_dim: int = 512,
