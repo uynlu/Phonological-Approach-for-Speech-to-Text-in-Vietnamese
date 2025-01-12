@@ -18,7 +18,7 @@ if __name__ == "__main__":
         vocab
     )
     dev = CharacterDataset(
-        "/kaggle/working/common_voice/converted-voices",
+        "/kaggle/working/common_voice/wav-voices",
         16000,
         80,
         400,
@@ -28,7 +28,7 @@ if __name__ == "__main__":
         vocab
     )
     test = CharacterDataset(
-        "/kaggle/working/common_voice/converted-voices",
+        "/kaggle/working/common_voice/wav-voices",
         16000,
         80,
         400,
