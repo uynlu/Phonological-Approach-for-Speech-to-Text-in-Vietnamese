@@ -8,33 +8,33 @@ from excutors import Excutor
 if __name__ == "__main__":
     vocab = CharacterVocab()
     train = CharacterDataset(
-        "Vietnamese-Speech-to-Text-datasets/Common-Voice/converted-voices",
+        "/kaggle/working/common_voice/wav-voices",
         16000,
         80,
         400,
         512,
         1024,
-        "Vietnamese-Speech-to-Text-datasets/Common-Voice/train.json",
+        "/kaggle/working/common_voice/train.json",
         vocab
     )
     dev = CharacterDataset(
-        "Vietnamese-Speech-to-Text-datasets/Common-Voice/converted-voices",
+        "/kaggle/working/common_voice/converted-voices",
         16000,
         80,
         400,
         512,
         1024,
-        "Vietnamese-Speech-to-Text-datasets/Common-Voice/dev.json",
+        "/kaggle/working/common_voice/dev.json",
         vocab
     )
     test = CharacterDataset(
-        "Vietnamese-Speech-to-Text-datasets/Common-Voice/converted-voices",
+        "/kaggle/working/common_voice/converted-voices",
         16000,
         80,
         400,
         512,
         1024,
-        "Vietnamese-Speech-to-Text-datasets/Common-Voice/test.json",
+        "/kaggle/working/common_voice/test.json",
         vocab
     )
     device=torch.device("cuda" if torch.cuda.is_available() else "cpu")
