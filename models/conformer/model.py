@@ -5,6 +5,7 @@ from torch import Tensor
 from typing import Tuple
 
 from .encoder import ConformerEncoder
+from .decoder import LSTMDecoder
 from .modules import Linear
 
 
@@ -38,6 +39,7 @@ class Conformer(nn.Module):
     """
     def __init__(
             self,
+            vocab,
             num_classes: int,
             input_dim: int = 80,
             encoder_dim: int = 512,
@@ -51,6 +53,8 @@ class Conformer(nn.Module):
             conv_dropout_p: float = 0.1,
             conv_kernel_size: int = 31,
             half_step_residual: bool = True,
+            decoder_dim = 1024,
+            num_decoder_layers = 10
     ) -> None:
         super(Conformer, self).__init__()
         self.encoder = ConformerEncoder(
@@ -67,7 +71,12 @@ class Conformer(nn.Module):
             conv_kernel_size=conv_kernel_size,
             half_step_residual=half_step_residual,
         )
-        self.fc = Linear(encoder_dim, num_classes, bias=False)
+        self.decoder = LSTMDecoder(
+            d_encoder=encoder_dim,
+            d_decoder=decoder_dim,
+            num_classes=vocab.size,
+            num_layers=num_decoder_layers
+        )
 
     def count_parameters(self) -> int:
         """ Count parameters of encoder """
@@ -90,6 +99,5 @@ class Conformer(nn.Module):
             * predictions (torch.FloatTensor): Result of model predictions.
         """
         encoder_outputs, encoder_output_lengths = self.encoder(inputs, input_lengths)
-        outputs = self.fc(encoder_outputs)
-        outputs = nn.functional.log_softmax(outputs, dim=-1)
+        outputs = self.decoder(encoder_outputs)
         return outputs, encoder_output_lengths
