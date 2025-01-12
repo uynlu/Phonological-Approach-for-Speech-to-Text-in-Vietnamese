@@ -5,7 +5,6 @@ from torch import Tensor
 from typing import Tuple
 
 from .encoder import ConformerEncoder
-from .decoder import LSTMDecoder
 from .modules import Linear
 
 
@@ -51,9 +50,7 @@ class Conformer(nn.Module):
             attention_dropout_p: float = 0.1,
             conv_dropout_p: float = 0.1,
             conv_kernel_size: int = 31,
-            half_step_residual: bool = True,
-            decoder_dim = 1024,
-            num_decoder_layers = 10
+            half_step_residual: bool = True
     ) -> None:
         super(Conformer, self).__init__()
         self.encoder = ConformerEncoder(
@@ -70,12 +67,7 @@ class Conformer(nn.Module):
             conv_kernel_size=conv_kernel_size,
             half_step_residual=half_step_residual,
         )
-        # self.decoder = LSTMDecoder(
-        #     d_encoder=encoder_dim,
-        #     d_decoder=decoder_dim,
-        #     num_classes=vocab.size,
-        #     num_layers=num_decoder_layers
-        # )
+
         self.fc = nn.Linear(encoder_dim, num_classes)
 
     def count_parameters(self) -> int:
