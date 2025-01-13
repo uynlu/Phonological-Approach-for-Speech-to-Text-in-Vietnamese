@@ -113,7 +113,7 @@ class Excutor:
             print(gen_scripts)
         
         scores= evaluations.compute_metrics(gt_scripts, gen_scripts)
-        print("Evaluation scores on test: %s", scores)
+        print("Evaluation scores on test: ", scores)
 
     def run(self, num_epochs):
         while True:

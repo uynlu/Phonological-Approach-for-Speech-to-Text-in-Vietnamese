@@ -4,8 +4,8 @@ import torch
 class CharacterVocab:
     def __init__(self):
         self.pad_token = "<pad>"
-        self.bos_token = "<bos>"
-        self.eos_token = "<eos>"
+        # self.bos_token = "<bos>"
+        # self.eos_token = "<eos>"
 
         characters = [
             "a", "á", "à", "ả", "ã", "ạ",
