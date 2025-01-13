@@ -128,5 +128,5 @@ class Excutor:
     def save_checkpoint(self):
         pass
 
-    def load_checkpoint(self)L
+    def load_checkpoint(self):
         pass

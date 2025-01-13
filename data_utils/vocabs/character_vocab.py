@@ -22,7 +22,7 @@ class CharacterVocab:
             "y", "ý", "ỳ", "ỷ", "ỹ", "ỵ",
             "u", "ú", "ù", "ủ", "ũ", "ụ",
             "ư", "ứ", "ừ", "ử", "ữ", "ự",
-            "r", "s", "t", "v", "x", 
+            "r", "s", "t", "v", "x",
             "f", "z", "w", "j"
         ]
         characters = [self.pad_token, self.bos_token, self.eos_token] + characters
