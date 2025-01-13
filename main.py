@@ -1,11 +1,10 @@
 import torch
-from torch.utils.data import ConcatDataset
 
 from data_utils.vocabs.character_vocab import CharacterVocab
 from data_utils.datasets.speech2text_dataset import CharacterDataset
 from models.conformer.model import Conformer
 from excutors import Excutor
-
+from torch.utils.data import ConcatDataset
 
 if __name__ == "__main__":
     vocab = CharacterVocab()
@@ -40,7 +39,7 @@ if __name__ == "__main__":
         vocab
     )
     train_vivos = CharacterDataset(
-        "/kaggle/working/vivos/voices",
+        "/kaggle/working/vivos/wav-voices",
         16000,
         80,
         400,
@@ -50,7 +49,7 @@ if __name__ == "__main__":
         vocab
     )
     test_vivos = CharacterDataset(
-        "/kaggle/working/vivos/voices",
+        "/kaggle/working/vivos/wav-voices",
         16000,
         80,
         400,
@@ -75,4 +74,4 @@ if __name__ == "__main__":
         vocab=vocab,
     )
     excutor.create_dataloaders(train, dev, test, 64)
-    excutor.run(100)
+    excutor.run()
