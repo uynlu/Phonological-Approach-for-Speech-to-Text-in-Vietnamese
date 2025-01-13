@@ -8,36 +8,36 @@ from torch.utils.data import ConcatDataset
 
 if __name__ == "__main__":
     vocab = CharacterVocab()
-    train_commonvoice = CharacterDataset(
-        "/kaggle/working/common_voice/wav-voices",
-        16000,
-        80,
-        400,
-        512,
-        1024,
-        "/kaggle/working/common_voice/train.json",
-        vocab
-    )
-    dev_commonvoice = CharacterDataset(
-        "/kaggle/working/common_voice/wav-voices",
-        16000,
-        80,
-        400,
-        512,
-        1024,
-        "/kaggle/working/common_voice/dev.json",
-        vocab
-    )
-    test_commonvoice = CharacterDataset(
-        "/kaggle/working/common_voice/wav-voices",
-        16000,
-        80,
-        400,
-        512,
-        1024,
-        "/kaggle/working/common_voice/test.json",
-        vocab
-    )
+    # train_commonvoice = CharacterDataset(
+    #     "/kaggle/working/common_voice/wav-voices",
+    #     16000,
+    #     80,
+    #     400,
+    #     512,
+    #     1024,
+    #     "/kaggle/working/common_voice/train.json",
+    #     vocab
+    # )
+    # dev_commonvoice = CharacterDataset(
+    #     "/kaggle/working/common_voice/wav-voices",
+    #     16000,
+    #     80,
+    #     400,
+    #     512,
+    #     1024,
+    #     "/kaggle/working/common_voice/dev.json",
+    #     vocab
+    # )
+    # test_commonvoice = CharacterDataset(
+    #     "/kaggle/working/common_voice/wav-voices",
+    #     16000,
+    #     80,
+    #     400,
+    #     512,
+    #     1024,
+    #     "/kaggle/working/common_voice/test.json",
+    #     vocab
+    # )
     train_vivos = CharacterDataset(
         "/kaggle/working/vivos/wav-voices",
         16000,
@@ -58,7 +58,8 @@ if __name__ == "__main__":
         "/kaggle/working/vivos/test.json",
         vocab
     )
-    dataset = ConcatDataset([train_commonvoice, dev_commonvoice, test_commonvoice, train_vivos, test_vivos])
+    # dataset = ConcatDataset([train_commonvoice, dev_commonvoice, test_commonvoice, train_vivos, test_vivos])
+    dataset = ConcatDataset([train_vivos, test_vivos])
     train, test = torch.utils.data.random_split(dataset, [0.8, 0.2])
     train, dev = torch.utils.data.random_split(train, [0.8, 0.2])
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
