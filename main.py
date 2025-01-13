@@ -1,10 +1,11 @@
 import torch
+from torch.utils.data import ConcatDataset
 
 from data_utils.vocabs.character_vocab import CharacterVocab
 from data_utils.datasets.speech2text_dataset import CharacterDataset
 from models.conformer.model import Conformer
 from excutors import Excutor
-from torch.utils.data import ConcatDataset
+
 
 if __name__ == "__main__":
     vocab = CharacterVocab()
@@ -61,7 +62,7 @@ if __name__ == "__main__":
     dataset = ConcatDataset([train_commonvoice, dev_commonvoice, test_commonvoice, train_vivos, test_vivos])
     train, test = torch.utils.data.random_split(dataset, [0.8, 0.2])
     train, dev = torch.utils.data.random_split(train, [0.8, 0.2])
-    device=torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     model = Conformer(
         num_classes=vocab.size, 
         input_dim=80, 
