@@ -133,9 +133,9 @@ class Excutor:
 
 
     def run(self, convergence_threshold=0.001, loss_threshold=0.1):
-        checkpoint = self.load_checkpoint(os.path.join(self.checkpoint_path, "last_model.pth"))
-        if checkpoint:
-            self.epoch = checkpoint["epoch"] + 1  
+        # checkpoint = self.load_checkpoint(os.path.join(self.checkpoint_path, "last_model.pth"))
+        # if checkpoint:
+        #     self.epoch = checkpoint["epoch"] + 1  
 
         prev_loss = float('inf')  
         count = 0  
@@ -158,7 +158,7 @@ class Excutor:
 
             prev_loss = current_loss
 
-            self.save_checkpoint()
+            # self.save_checkpoint()
 
             self.epoch += 1
 
@@ -191,38 +191,36 @@ class Excutor:
 
         scores = evaluations.compute_metrics(references, predictions)
         
-    def lambda_lr(self, step):
-        warm_up = self.warmup
-        step += 1
-        return (self.d_model ** -.5) * min(step ** -.5, step * warm_up ** -1.5)
+    # def lambda_lr(self, step):
+    #     warm_up = self.warmup
+    #     step += 1
+    #     return (self.d_model ** -.5) * min(step ** -.5, step * warm_up ** -1.5)
 
+    # def load_checkpoint(self, fname) -> dict:
+    #     if not os.path.exists(fname):
+    #         return None
 
-    def load_checkpoint(self, fname) -> dict:
-        if not os.path.exists(fname):
-            return None
+    #     checkpoint = torch.load(fname, map_location=self.device)
 
-        checkpoint = torch.load(fname, map_location=self.device)
+    #     self.model.load_state_dict(checkpoint['state_dict'], strict=False)
 
-        self.model.load_state_dict(checkpoint['state_dict'], strict=False)
+    #     if 'optimizer' in checkpoint:
+    #         self.optim.load_state_dict(checkpoint['optimizer'])
+    #     if 'scheduler' in checkpoint and hasattr(self, 'scheduler'):
+    #         self.scheduler.load_state_dict(checkpoint['scheduler'])
 
-        if 'optimizer' in checkpoint:
-            self.optim.load_state_dict(checkpoint['optimizer'])
-        if 'scheduler' in checkpoint and hasattr(self, 'scheduler'):
-            self.scheduler.load_state_dict(checkpoint['scheduler'])
+    #     return checkpoint
 
-        return checkpoint
+    # def save_checkpoint(self, dict_for_updating: dict = None) -> None:
+    #     dict_for_saving = {
+    #         'epoch': self.epoch,
+    #         'state_dict': self.model.state_dict(),
+    #         'optimizer': self.optim.state_dict(),
+    #         'scheduler': self.scheduler.state_dict()
+    #     }
 
+    #     if dict_for_updating:
+    #         dict_for_saving.update(dict_for_updating)
 
-    def save_checkpoint(self, dict_for_updating: dict = None) -> None:
-        dict_for_saving = {
-            'epoch': self.epoch,
-            'state_dict': self.model.state_dict(),
-            'optimizer': self.optim.state_dict(),
-            'scheduler': self.scheduler.state_dict()
-        }
-
-        if dict_for_updating:
-            dict_for_saving.update(dict_for_updating)
-
-        save_path = os.path.join(self.checkpoint_path, "last_model.pth")
-        torch.save(dict_for_saving, save_path)
+    #     save_path = os.path.join(self.checkpoint_path, "last_model.pth")
+    #     torch.save(dict_for_saving, save_path)
