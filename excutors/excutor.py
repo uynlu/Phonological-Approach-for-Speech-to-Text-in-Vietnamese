@@ -117,7 +117,7 @@ class Excutor:
 
     def run(self, num_epochs):
         while True:
-            if self.num_epochs < num_epochs:
+            if self.epoch < num_epochs:
                 break
 
             self.train()
