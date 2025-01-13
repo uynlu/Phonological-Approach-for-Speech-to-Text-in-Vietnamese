@@ -80,9 +80,14 @@ class PhonemeDataset(CharacterDataset):
         voice = self.transformer.transform(voice)
         voice = voice.squeeze(0).transpose(-1, -2)
 
+        input_length = voice.shape[0]
+        target_length = script_ids.shape[0]
+
         return Instance(
             id = key,
             voice = voice,
+            input_length=input_length,
+            target_length=target_length,
             script = script,
             labels = script_ids,
             word_indices = word_indices

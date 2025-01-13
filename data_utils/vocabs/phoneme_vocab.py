@@ -127,7 +127,7 @@ class PhonemeVocabv2:
         Turn words into continuous senquences of phoneme
     '''
     
-    def __init__(self, config):
+    def __init__(self):
         self.pad_token = "<pad>"
         self.bos_token = "<bos>"
         self.eos_token = "<eos>"
@@ -247,7 +247,7 @@ class PhonemeVocabv2:
         
         vec = torch.tensor(phoneme_script).long()
         word_indices = torch.tensor(word_indices).long()
-
+        
         return vec, word_indices
 
     def decode_script(self, tensor_script: torch.Tensor, word_indices: torch.Tensor):
