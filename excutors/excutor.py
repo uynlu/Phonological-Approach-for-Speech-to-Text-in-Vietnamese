@@ -42,7 +42,7 @@ class Excutor:
             weight_decay=weight_decay
         )
 
-        self.scheduler = LambdaLR(self.optim, self.lambda_lr)
+        # self.scheduler = LambdaLR(self.optim, self.lambda_lr)
         self.grad_scaler = GradScaler(enabled=use_amp)
         self.loss = nn.CTCLoss(zero_infinity=True).to(device)
         self.epoch = 1
