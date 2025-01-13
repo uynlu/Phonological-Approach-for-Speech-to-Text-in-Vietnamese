@@ -5,6 +5,7 @@ from torch.optim import AdamW
 from torch.amp import GradScaler
 
 from tqdm import tqdm
+import os
 
 from utils.instance import Instance, InstanceList
 import evaluations
@@ -62,7 +63,7 @@ class Excutor:
             collate_fn=self.collate_fn
         )
     
-    def train(self, print_interval=20):
+    def train(self):
         self.model.train()
         running_loss = .0
         with tqdm(desc='Epoch %d - Training' % self.epoch, unit='it', total=len(self.train_dataloader)) as pbar:
@@ -89,7 +90,9 @@ class Excutor:
                 })
                 pbar.update()
 
-    def evaluate(self, print_interval=10):
+        return running_loss / len(self.train_dataloader)
+
+    def evaluate(self):
         self.model.eval()
         gen_scripts = []
         gt_scripts = []
@@ -109,21 +112,37 @@ class Excutor:
                 
                 pbar.update()
         
-        scores= evaluations.compute_metrics(gt_scripts, gen_scripts)
+        scores = evaluations.compute_metrics(gt_scripts, gen_scripts)
         print("Evaluation scores on test: ", scores)
+        
 
-    def run(self, num_epochs):
+    def run(self, convergence_threshold=0.0001, loss_threshold=0.01):
+        prev_loss = float('inf')
+        count = 0
+        
         while True:
-            if self.epoch > num_epochs:
+            current_loss = self.train()
+            self.evaluate()
+            
+            if current_loss < loss_threshold:
                 break
 
-            self.train()
-            self.evaluate()
+            if abs(prev_loss - current_loss) < convergence_threshold:
+                count += 1
+            else:
+                count = 0
+
+            if count >= 5:
+                break
+
+            prev_loss = current_loss
+
+            # self.save_checkpoint()
 
             self.epoch += 1
 
-    def save_checkpoint(self):
+    def save_checkpoint(self, dict_for_updating):
         pass
 
-    def load_checkpoint(self):
+    def load_checkpoint(self, fname):
         pass
