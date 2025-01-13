@@ -49,7 +49,7 @@ class CharacterDataset(Dataset):
         voice, _ = torchaudio.load(os.path.join(self.voice_path, audio_file))
         voice = self.transformer.transform(voice)
         voice = voice.squeeze(0).transpose(0, 1)
-        
+
         input_length = voice.shape[0]
         target_length = script_ids.shape[0]
 
@@ -73,6 +73,7 @@ class PhonemeDataset(CharacterDataset):
         script = normalize_script(script)
         
         script_ids, word_indices = self.vocab.encode_script(script)
+        
         audio_file = item["voice"]
         audio_file = audio_file.replace("mp3", "wav")
         voice, _ = torchaudio.load(os.path.join(self.voice_path, audio_file))
