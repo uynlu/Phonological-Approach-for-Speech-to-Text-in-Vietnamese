@@ -41,9 +41,8 @@ class CharacterDataset(Dataset):
         script = script.lower()
         script = normalize_script(script)
         script_ids = self.vocab.encode_script(script)
-        script = f"<bos>{script}<eos>"
         shifted_right_script_ids = script_ids[1:]
-        # script_ids = script_ids[:-1]
+        script_ids = script_ids[:-1]
 
         audio_file = item["voice"]
         audio_file = audio_file.replace("mp3", "wav")
