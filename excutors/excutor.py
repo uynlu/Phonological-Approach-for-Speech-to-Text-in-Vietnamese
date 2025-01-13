@@ -109,9 +109,6 @@ class Excutor:
                 
                 pbar.update()
         
-            print(gt_scripts)
-            print(gen_scripts)
-        
         scores= evaluations.compute_metrics(gt_scripts, gen_scripts)
         print("Evaluation scores on test: ", scores)
 
