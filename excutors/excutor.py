@@ -132,7 +132,7 @@ class Excutor:
         print("Evaluation scores on test: %s", scores)
 
 
-    def run(self, num_epochs, convergence_threshold=0.001, loss_threshold=0.1):
+    def run(self, convergence_threshold=0.001, loss_threshold=0.1):
         checkpoint = self.load_checkpoint(os.path.join(self.checkpoint_path, "last_model.pth"))
         if checkpoint:
             self.epoch = checkpoint["epoch"] + 1  
@@ -140,7 +140,7 @@ class Excutor:
         prev_loss = float('inf')  
         count = 0  
 
-        while self.epoch <= num_epochs:
+        while True:
             current_loss = self.train()
             self.evaluate()
             
@@ -159,6 +159,7 @@ class Excutor:
             prev_loss = current_loss
 
             self.save_checkpoint()
+
             self.epoch += 1
 
 
@@ -167,7 +168,6 @@ class Excutor:
 
         self.model.eval()
         results = {}
-        # logger.info(f"Epoch {self.epoch+1} - Evaluating")
         for item in self.test_dataloader:
             with torch.no_grad():
                 item = item.to(self.device)
@@ -185,9 +185,10 @@ class Excutor:
                 "prediction": gen_script[0],
                 "reference": gt_script[0]
             }
-
+            
         predictions = [results[id]["prediction"] for id in results]
         references = [results[id]["reference"] for id in results]
+
         scores = evaluations.compute_metrics(references, predictions)
         
     def lambda_lr(self, step):
