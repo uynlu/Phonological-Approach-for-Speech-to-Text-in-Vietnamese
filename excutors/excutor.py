@@ -123,16 +123,13 @@ class Excutor:
         while True:
             current_loss = self.train()
             self.evaluate()
-            
-            if current_loss < loss_threshold:
-                break
 
             if abs(prev_loss - current_loss) < convergence_threshold:
                 count += 1
             else:
                 count = 0
 
-            if count >= 5:
+            if count >= 5 and current_loss < loss_threshold:
                 break
 
             prev_loss = current_loss
