@@ -239,9 +239,7 @@ class PhonemeVocabv2:
                 self.blank_idx])
 
         phoneme_script = phoneme_script[:-1] # skip the last blank token
-        bos_token = [self.bos_idx, self.blank_idx, self.blank_idx, self.blank_idx]
-        eos_token = [self.eos_idx, self.blank_idx, self.blank_idx, self.blank_idx]
-        phoneme_script = bos_token + phoneme_script + eos_token
+        phoneme_script = self.bos_idx + phoneme_script + self.eos_idx
         # index for bos token and eos token
         word_indices = [0] + word_indices + [len(word_indices)+1]
         
