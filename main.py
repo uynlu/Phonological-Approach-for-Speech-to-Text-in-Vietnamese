@@ -74,5 +74,6 @@ if __name__ == "__main__":
         vocab=vocab,
     )
     excutor.create_dataloaders(train, dev, test, 64)
-    excutor.run(100)
+    excutor.get_prediction()
+    excutor.run()
     
