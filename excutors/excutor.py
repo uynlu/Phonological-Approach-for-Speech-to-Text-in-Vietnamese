@@ -138,6 +138,31 @@ class Excutor:
 
             self.epoch += 1
 
+    def get_prediction(self):
+        self.model.eval()
+        gen_scripts = []
+        gt_scripts = []
+        with tqdm(desc='Epoch %d - Evaluation' % self.epoch, unit='it', total=len(self.test_dataloader)) as pbar:
+            for item in self.test_dataloader:
+                with torch.no_grad():
+                    item = item.to(self.device)
+                    inputs = item.voice.to(self.device)
+                    input_length = torch.LongTensor(item.input_length).to(self.device)
+                    target = item.script
+
+                    outputs, _ = self.model(inputs, input_length)
+                    predicted_ids = outputs.argmax(-1)
+
+                gt_scripts.append(target[0])
+                gen_scripts.append(self.vocab.decode_script(predicted_ids))
+                
+                pbar.update()
+        print(f"predicted_scripts:{gt_scripts}")
+        print(f"predicted_scripts:{gen_scripts}")
+
+        scores = evaluations.compute_metrics(gt_scripts, gen_scripts)
+        print("Evaluation scores on test: ", scores)
+
     def save_checkpoint(self, dict_for_updating):
         pass
 
