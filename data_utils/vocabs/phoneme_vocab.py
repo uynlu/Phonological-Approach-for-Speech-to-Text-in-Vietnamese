@@ -37,10 +37,6 @@ class PhonemeVocabv1:
 
         self.special_ids = [self.pad_idx, self.bos_idx, self.eos_idx, self.blank_idx]
     
-    @property
-    def size(self) -> int:
-        return len(self.phoneme2idx)
-
     def encode_script(self, script: str):
         words = script.split()
         word_components = []
@@ -209,6 +205,10 @@ class PhonemeVocabv2:
         self.blank_idx = self.phoneme2idx[self.blank_token]
 
         self.special_ids = [self.pad_idx, self.bos_idx, self.eos_idx, self.blank_idx]
+
+    @property
+    def size(self) -> int:
+        return len(self.phoneme2idx)
 
     def encode_script(self, script: str):
         words = script.split()
