@@ -17,7 +17,7 @@ class PhonemeExecutor:
         model,
         device,
         vocab,
-        learning_rate=1e-3,
+        learning_rate=4e-3,
         use_amp=False,
         weight_decay=0.00005
     ):

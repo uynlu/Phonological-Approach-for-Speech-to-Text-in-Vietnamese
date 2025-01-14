@@ -11,13 +11,13 @@ from utils.instance import Instance, InstanceList
 import evaluations
 
 
-class CharactorExecutor:
+class CharacterExecutor:
     def __init__(
         self,
         model,
         device,
         vocab,
-        learning_rate=1e-5,
+        learning_rate=1e-4,
         use_amp=False,
         weight_decay=0.00005
     ):
