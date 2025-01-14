@@ -11,7 +11,7 @@ from utils.instance import Instance, InstanceList
 import evaluations
 
 
-class PhonemeExcutor:
+class PhonemeExecutor:
     def __init__(
         self,
         model,
