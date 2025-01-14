@@ -50,7 +50,7 @@ class Conformer(nn.Module):
             feed_forward_dropout_p: float = 0.1,
             attention_dropout_p: float = 0.1,
             conv_dropout_p: float = 0.1,
-            conv_kernel_size: int = 32,
+            conv_kernel_size: int = 31,
             half_step_residual: bool = True,
             decoder_dim: int = 320,
             num_decoder_layers: int = 1,
