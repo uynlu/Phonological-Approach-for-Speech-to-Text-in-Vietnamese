@@ -17,7 +17,7 @@ class Excutor:
         model,
         device,
         vocab,
-        learning_rate=0.1,
+        learning_rate=3e-4,
         use_amp=False,
         weight_decay=0.00005
     ):
