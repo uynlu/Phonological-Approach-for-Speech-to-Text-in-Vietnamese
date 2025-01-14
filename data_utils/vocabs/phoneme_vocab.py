@@ -180,7 +180,7 @@ class PhonemeVocabv2:
             "uyp", "uyt", "uyu",
             "uach", "uai", "uan", "uang", "uanh", "uao", "uat", "uau", "uay",
             "uăc", "uăm", "uăn", "uăng", "uăp", "uăt", "uâc", "uât", "uoang",
-            "ue", "uen", "ueo", "uet", "uên", "uêt", "uêu",
+            "ue", "uen", "ueo", "uet", "uên", "uêt", "uêu", "uit", "uơn"
             
             # ư
             "ư", "ưa", "ưc", "ưi",

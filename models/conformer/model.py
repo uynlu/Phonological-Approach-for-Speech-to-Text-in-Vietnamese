@@ -6,6 +6,7 @@ from typing import Tuple
 
 from .encoder import ConformerEncoder
 from .modules import Linear
+from .decoder import LSTMDecoder
 
 
 class Conformer(nn.Module):
@@ -40,17 +41,19 @@ class Conformer(nn.Module):
             self,
             num_classes: int,
             input_dim: int = 80,
-            encoder_dim: int = 512,
-            num_encoder_layers: int = 17,
-            num_attention_heads: int = 8,
+            encoder_dim: int = 144,
+            num_encoder_layers: int = 16,
+            num_attention_heads: int = 4,
             feed_forward_expansion_factor: int = 4,
             conv_expansion_factor: int = 2,
             input_dropout_p: float = 0.1,
             feed_forward_dropout_p: float = 0.1,
             attention_dropout_p: float = 0.1,
             conv_dropout_p: float = 0.1,
-            conv_kernel_size: int = 31,
-            half_step_residual: bool = True
+            conv_kernel_size: int = 32,
+            half_step_residual: bool = True,
+            decoder_dim: int = 320,
+            num_decoder_layers: int = 1,
     ) -> None:
         super(Conformer, self).__init__()
         self.encoder = ConformerEncoder(
@@ -67,8 +70,12 @@ class Conformer(nn.Module):
             conv_kernel_size=conv_kernel_size,
             half_step_residual=half_step_residual,
         )
-
-        self.fc = nn.Linear(encoder_dim, num_classes)
+        self.decoder = LSTMDecoder(
+            d_encoder=encoder_dim,
+            d_decoder=decoder_dim,
+            num_layers=num_decoder_layers,
+            num_classes=num_classes
+        )
 
     def count_parameters(self) -> int:
         """ Count parameters of encoder """
@@ -91,6 +98,5 @@ class Conformer(nn.Module):
             * predictions (torch.FloatTensor): Result of model predictions.
         """
         encoder_outputs, encoder_output_lengths = self.encoder(inputs, input_lengths)
-        logits = self.fc(encoder_outputs)
-        outputs = nn.functional.log_softmax(logits, dim=-1)
+        outputs = self.decoder(encoder_outputs)
         return outputs, encoder_output_lengths
