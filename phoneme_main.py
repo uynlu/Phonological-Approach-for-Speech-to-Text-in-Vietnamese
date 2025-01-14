@@ -1,10 +1,11 @@
 import torch
+from torch.utils.data import ConcatDataset
 
 from data_utils.vocabs.phoneme_vocab import PhonemeVocabv2
 from data_utils.datasets.speech2text_dataset import PhonemeDataset
 from models.conformer.model import Conformer
-from excutors import Excutor
-from torch.utils.data import ConcatDataset
+from excutors.phoneme_excutor import PhonemeExcutor
+
 
 if __name__ == "__main__":
     vocab = PhonemeVocabv2()
@@ -68,7 +69,7 @@ if __name__ == "__main__":
         encoder_dim=32,
         num_encoder_layers=3
     ).to(device)
-    excutor = Excutor(
+    excutor = PhonemeExcutor(
         model=model,
         device=device,
         vocab=vocab,

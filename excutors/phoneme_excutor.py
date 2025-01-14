@@ -11,7 +11,7 @@ from utils.instance import Instance, InstanceList
 import evaluations
 
 
-class Excutor:
+class PhonemeExcutor:
     def __init__(
         self,
         model,
@@ -103,12 +103,13 @@ class Excutor:
                     inputs = item.voice.to(self.device)
                     input_length = torch.LongTensor(item.input_length).to(self.device)
                     target = item.script
+                    word_indices = torch.LongTensor(item.word_indices).to(self.device)
 
                     outputs, _ = self.model(inputs, input_length)
                     predicted_ids = outputs.argmax(-1)
 
                 gt_scripts.append(target[0])
-                gen_scripts.append(self.vocab.decode_script(predicted_ids))
+                gen_scripts.append(self.vocab.decode_script(predicted_ids, word_indices))
                 
                 pbar.update()
         
@@ -149,14 +150,16 @@ class Excutor:
                     inputs = item.voice.to(self.device)
                     input_length = torch.LongTensor(item.input_length).to(self.device)
                     target = item.script
+                    word_indices = torch.LongTensor(item.word_indices).to(self.device)
 
                     outputs, _ = self.model(inputs, input_length)
-                    predicted_ids = outputs.argmax(-1)
+                    predicted_ids = outputs.argmax(-1)                    
 
                 gt_scripts.append(target[0])
-                gen_scripts.append(self.vocab.decode_script(predicted_ids))
+                gen_scripts.append(self.vocab.decode_script(predicted_ids, word_indices))
                 
                 pbar.update()
+
         print(f"predicted_scripts:{gt_scripts}")
         print(f"predicted_scripts:{gen_scripts}")
 
