@@ -1,6 +1,6 @@
 from jiwer.measures import cer, wer
 
-def compute_metrics(hypothesis: list[str], references: list[str]) -> dict:
+def compute_metrics(references: list[str], hypothesis: list[str]) -> dict:
     cer_score = cer(references, hypothesis)
     wer_score = wer(references, hypothesis)
 
