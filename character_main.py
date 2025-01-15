@@ -39,7 +39,7 @@ if __name__ == "__main__":
         "/kaggle/working/common_voice/test.json",
         vocab
     )
-    train_vivos = PhonemeDataset(
+    train_vivos = CharacterDataset(
         "/kaggle/working/vivos/voices",
         16000,
         80,
@@ -49,7 +49,7 @@ if __name__ == "__main__":
         "/kaggle/working/vivos/train.json",
         vocab
     )
-    test_vivos = PhonemeDataset(
+    test_vivos = CharacterDataset(
         "/kaggle/working/vivos/voices",
         16000,
         80,
