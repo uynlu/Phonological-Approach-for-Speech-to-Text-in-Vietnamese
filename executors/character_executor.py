@@ -114,6 +114,9 @@ class CharacterExecutor:
         
         scores = evaluations.compute_metrics(gt_scripts, gen_scripts)
         print("Evaluation scores on test: ", scores)
+        if scores[0] < 90:
+            print(f"predicted scripts: {gen_scripts}")
+            print(f"scripts: {gt_scripts}")
         
 
     def run(self, convergence_threshold=0.0001, loss_threshold=0.01):
