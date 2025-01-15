@@ -114,7 +114,7 @@ class CharacterExecutor:
         
         scores = evaluations.compute_metrics(gt_scripts, gen_scripts)
         print("Evaluation scores on test: ", scores)
-        if scores[0] < 90:
+        if scores["CER"] < 90:
             print(f"predicted scripts: {gen_scripts}")
             print(f"scripts: {gt_scripts}")
         
